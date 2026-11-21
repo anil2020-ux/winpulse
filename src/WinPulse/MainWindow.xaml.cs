@@ -20,6 +20,15 @@ public partial class MainWindow : Window
         Left = workArea.Left + (workArea.Width - Width) / 2;
         Top = workArea.Top + (workArea.Height - Height) / 2;
         WindowState = WindowState.Maximized;
+
+        // On narrow windows the preview pane steals too much room; start it collapsed.
+        Loaded += (_, _) =>
+        {
+            if (DataContext is MainViewModel viewModel && ActualWidth < 1180)
+            {
+                viewModel.Files.IsPreviewVisible = false;
+            }
+        };
     }
 
     private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
