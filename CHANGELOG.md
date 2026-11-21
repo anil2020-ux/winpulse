@@ -2,6 +2,17 @@
 
 All notable changes to WinPulse are documented here. Versions follow `MAJOR.MINOR.PATCH`.
 
+## [1.0.1] - 2026-11-21
+
+Maintenance release that validates the in-app update pipeline end to end.
+
+### Fixed
+- Installer console output is now ASCII-safe on non-UTF-8 terminals.
+- Cleanup header now shows reclaimable space instead of repeating the suggestion count.
+
+### Verified
+- WinPulse 1.0.0 detects this release, downloads it in-app and replaces itself using the staged updater.
+
 ## [1.0.0] - 2026-11-21
 
 First public release.

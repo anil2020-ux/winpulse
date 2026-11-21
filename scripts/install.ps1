@@ -1,4 +1,4 @@
-# WinPulse installer for Windows (per-user, no admin required).
+﻿# WinPulse installer for Windows (per-user, no admin required).
 #
 #   .\install.ps1                 install the latest GitHub release
 #   .\install.ps1 -Token $env:GITHUB_TOKEN   install from a private repository
@@ -20,7 +20,7 @@ $appDir = Join-Path $env:LOCALAPPDATA 'Programs\WinPulse'
 $apiHeaders = @{ 'User-Agent' = 'WinPulse-Installer' }
 if ($Token) { $apiHeaders['Authorization'] = "Bearer $Token" }
 
-Write-Host "Resolving WinPulse release ($Version)…" -ForegroundColor Cyan
+Write-Host "Resolving WinPulse release ($Version)â€¦" -ForegroundColor Cyan
 if ($Version -eq 'latest') {
     $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases/latest" -Headers $apiHeaders
 } else {
@@ -33,19 +33,19 @@ if (-not $asset) {
 }
 
 $tag = $release.tag_name
-Write-Host "Downloading $($asset.name) ($([math]::Round($asset.size / 1MB, 1)) MB), version $tag…" -ForegroundColor Cyan
+Write-Host "Downloading $($asset.name) ($([math]::Round($asset.size / 1MB, 1)) MB), version $tagâ€¦" -ForegroundColor Cyan
 $tempZip = Join-Path $env:TEMP ("winpulse-" + [Guid]::NewGuid().ToString('N') + '.zip')
 Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $tempZip -Headers $apiHeaders
 
 $running = Get-Process WinPulse -ErrorAction SilentlyContinue
 if ($running) {
-    Write-Host "Closing the running WinPulse…" -ForegroundColor Yellow
+    Write-Host "Closing the running WinPulseâ€¦" -ForegroundColor Yellow
     $running | Stop-Process -Force
     Start-Sleep -Milliseconds 800
 }
 
 New-Item -ItemType Directory -Path $appDir -Force | Out-Null
-Write-Host "Installing to $appDir…" -ForegroundColor Cyan
+Write-Host "Installing to $appDirâ€¦" -ForegroundColor Cyan
 Expand-Archive -Path $tempZip -DestinationPath $appDir -Force
 Remove-Item $tempZip -Force
 
@@ -76,7 +76,7 @@ $shortcut = $shell.CreateShortcut((Join-Path $startMenu 'WinPulse.lnk'))
 $shortcut.TargetPath = $exe
 $shortcut.WorkingDirectory = $appDir
 $shortcut.IconLocation = "$exe,0"
-$shortcut.Description = 'WinPulse — Windows activity and file tracker'
+$shortcut.Description = 'WinPulse â€” Windows activity and file tracker'
 $shortcut.Save()
 
 # Per-user uninstall entry
