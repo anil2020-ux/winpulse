@@ -12,12 +12,14 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        // Fit inside the current work area (handles high-DPI and small screens).
+        // Fit inside the current work area (handles high-DPI and small screens), then start maximized
+        // so the sidebar, grid and preview pane always have room.
         var workArea = SystemParameters.WorkArea;
         Width = Math.Min(1440, Math.Max(MinWidth, workArea.Width - 40));
         Height = Math.Min(900, Math.Max(640, workArea.Height - 40));
         Left = workArea.Left + (workArea.Width - Width) / 2;
         Top = workArea.Top + (workArea.Height - Height) / 2;
+        WindowState = WindowState.Maximized;
     }
 
     private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
