@@ -13,6 +13,9 @@ public static class UpdateCli
     [DllImport("kernel32.dll")]
     private static extern bool AttachConsole(int processId);
 
+    private static readonly object ProgressGate = new();
+    private static int LastReportedPercent;
+
     public static int Run(string[] args)
     {
         AttachConsole(-1);
@@ -40,10 +43,22 @@ public static class UpdateCli
         var progress = new Progress<double>(percent =>
         {
             var rounded = (int)Math.Round(percent / 10) * 10;
-            if (rounded is > 0 and <= 100)
+            if (rounded <= 0)
             {
-                Console.WriteLine($"Downloading: {rounded}%");
+                return;
             }
+
+            lock (ProgressGate)
+            {
+                if (rounded <= LastReportedPercent)
+                {
+                    return;
+                }
+
+                LastReportedPercent = rounded;
+            }
+
+            Console.WriteLine($"Downloading: {rounded}%");
         });
 
         var download = service.DownloadAsync(result.Update, progress).GetAwaiter().GetResult();

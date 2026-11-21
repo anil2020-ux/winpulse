@@ -85,3 +85,15 @@ public sealed class CategoryBrushConverter : IValueConverter
     public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         Binding.DoNothing;
 }
+
+/// <summary>WebView2 rejects a null Source, so empty previews navigate to about:blank.</summary>
+public sealed class PdfUriConverter : IValueConverter
+{
+    private static readonly Uri Blank = new("about:blank");
+
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value as Uri ?? Blank;
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        Binding.DoNothing;
+}

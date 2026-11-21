@@ -9,6 +9,8 @@ Maintenance release that validates the in-app update pipeline end to end.
 ### Fixed
 - Installer console output is now ASCII-safe on non-UTF-8 terminals.
 - Cleanup header now shows reclaimable space instead of repeating the suggestion count.
+- The updater no longer purges extra files (such as `uninstall.ps1`) from the install folder.
+- PDF preview no longer throws when switching between files with no PDF selected.
 
 ### Verified
 - WinPulse 1.0.0 detects this release, downloads it in-app and replaces itself using the staged updater.

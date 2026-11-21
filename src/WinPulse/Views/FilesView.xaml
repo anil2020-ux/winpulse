@@ -251,7 +251,7 @@
                                  Visibility="{Binding ShowTextPreview, Converter={StaticResource BoolToVis}}" />
 
                         <wv2:WebView2 x:Name="PdfPreview"
-                                      Source="{Binding PreviewPdfUri}"
+                                      Source="{Binding PreviewPdfUri, Converter={StaticResource PdfUri}}"
                                       Visibility="{Binding ShowPdfPreview, Converter={StaticResource BoolToVis}}" />
 
                         <Grid Visibility="{Binding ShowMediaPreview, Converter={StaticResource BoolToVis}}">

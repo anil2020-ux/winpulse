@@ -9,6 +9,7 @@
     <core:CountToVisibilityConverter x:Key="CountToVis" />
     <core:CountToVisibilityConverter x:Key="EmptyToVis" Invert="True" />
     <core:CategoryBrushConverter x:Key="CategoryBrush" />
+    <core:PdfUriConverter x:Key="PdfUri" />
 
     <!-- Implicit: window chrome and typography -->
     <Style TargetType="{x:Type Window}">

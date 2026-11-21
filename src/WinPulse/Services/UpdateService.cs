@@ -259,6 +259,16 @@ public sealed class UpdateService
             Directory.CreateDirectory(stagingRoot);
             ZipFile.ExtractToDirectory(zipPath, stagingRoot);
 
+            // The staging folder is all the updater needs; reclaim the download immediately.
+            try
+            {
+                File.Delete(zipPath);
+            }
+            catch
+            {
+                // A locked download is harmless.
+            }
+
             var entries = Directory.GetFileSystemEntries(stagingRoot);
             var staging = entries.Length == 1 && Directory.Exists(entries[0]) ? entries[0] : stagingRoot;
 
