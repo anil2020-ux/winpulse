@@ -1,0 +1,102 @@
+<UserControl x:Class="WinPulse.Views.PreviewPane"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Padding="16,14" BorderBrush="{DynamicResource BrushBorderSoft}" BorderThickness="0,0,0,1">
+            <StackPanel>
+                <TextBlock Text="{Binding Title}"
+                           FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
+                           ToolTip="{Binding File.FullPath}" />
+                <TextBlock Text="{Binding Meta}" Style="{StaticResource Caption}" Margin="0,3,0,0" />
+                <Border Style="{StaticResource PillBorder}" HorizontalAlignment="Left" Margin="0,8,0,0">
+                    <TextBlock Text="{Binding TypeLabel}" FontSize="10"
+                               Foreground="{DynamicResource BrushAccent}" />
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <Border Grid.Row="1" Padding="16,10" BorderBrush="{DynamicResource BrushBorderSoft}" BorderThickness="0,0,0,1"
+                Visibility="{Binding HasPreview, Converter={StaticResource BoolToVis}}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Location" Style="{StaticResource Caption}" Margin="0,2,10,2" />
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding File.Folder}" Style="{StaticResource Caption}"
+                           TextTrimming="CharacterEllipsis" ToolTip="{Binding File.FullPath}" Margin="0,2" />
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Created" Style="{StaticResource Caption}" Margin="0,2,10,2" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding File.CreatedText}" Style="{StaticResource Caption}" Margin="0,2" />
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Age" Style="{StaticResource Caption}" Margin="0,2,10,2" />
+                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding File.AgeText}" Style="{StaticResource Caption}" Margin="0,2" />
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2" Background="{DynamicResource BrushBgDeep}">
+            <TextBlock Text="Select a file to preview it here"
+                       Style="{StaticResource Muted}"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Visibility="{Binding ShowEmptyPreview, Converter={StaticResource BoolToVis}}" />
+
+            <Border Visibility="{Binding ShowImagePreview, Converter={StaticResource BoolToVis}}" Padding="10">
+                <Image Source="{Binding PreviewImage}" Stretch="Uniform" />
+            </Border>
+
+            <TextBox Style="{StaticResource CodeBox}"
+                     Text="{Binding PreviewText, Mode=OneWay}"
+                     Visibility="{Binding ShowTextPreview, Converter={StaticResource BoolToVis}}" />
+
+            <wv2:WebView2 x:Name="PdfPreview"
+                          Visibility="{Binding ShowPdfPreview, Converter={StaticResource BoolToVis}}" />
+
+            <Grid Visibility="{Binding ShowMediaPreview, Converter={StaticResource BoolToVis}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <MediaElement x:Name="MediaPlayer"
+                              Grid.Row="0"
+                              Source="{Binding PreviewMedia}"
+                              LoadedBehavior="Manual"
+                              UnloadedBehavior="Manual"
+                              Stretch="Uniform"
+                              Margin="10" />
+                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,14">
+                    <Button Content="&#xE768;" FontFamily="{DynamicResource FontIcons}" Style="{StaticResource IconButton}"
+                            Click="PlayMedia_Click" Margin="0,0,6,0" ToolTip="Play" />
+                    <Button Content="&#xE769;" FontFamily="{DynamicResource FontIcons}" Style="{StaticResource IconButton}"
+                            Click="PauseMedia_Click" Margin="0,0,6,0" ToolTip="Pause" />
+                    <Button Content="&#xE71A;" FontFamily="{DynamicResource FontIcons}" Style="{StaticResource IconButton}"
+                            Click="StopMedia_Click" ToolTip="Stop" />
+                </StackPanel>
+            </Grid>
+
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Margin="28"
+                        Visibility="{Binding ShowUnsupportedPreview, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="&#xE7C3;" FontFamily="{DynamicResource FontIcons}" FontSize="32"
+                           HorizontalAlignment="Center" Foreground="{DynamicResource BrushTextMuted}" />
+                <TextBlock Text="{Binding Message}" Style="{StaticResource Muted}"
+                           TextWrapping="Wrap" TextAlignment="Center" Margin="0,14,0,0" />
+            </StackPanel>
+        </Grid>
+
+        <TextBlock Grid.Row="3" Text="Showing the first 512 KB of this file."
+                   Style="{StaticResource Caption}"
+                   Margin="14,8"
+                   Visibility="{Binding Truncated, Converter={StaticResource BoolToVis}}" />
+    </Grid>
+</UserControl>

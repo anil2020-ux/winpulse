@@ -65,6 +65,7 @@ It indexes your watched folders in the background, keeps a searchable timeline o
 
 ### Cleanup that explains itself
 - Large files, stale downloads, old screenshots, and **likely duplicate copies** (size + content hash).
+- Preview a suggestion before deleting it, then open, reveal, rename, copy, move or protect it — the same actions as File activity, without leaving the page.
 - One review list with reasons, multi-select, bulk recycle-bin delete, and protect.
 - Tunable age threshold and large-file threshold.
 

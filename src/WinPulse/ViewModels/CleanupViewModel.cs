@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Win32;
 using WinPulse.Core;
 using WinPulse.Models;
 using WinPulse.Services;
@@ -35,8 +36,10 @@ public sealed partial class CleanupViewModel : ObservableObject, IActivatableVie
     [ObservableProperty] private string _duplicatesText = "0 groups";
     [ObservableProperty] private int _itemCount;
     [ObservableProperty] private string _reclaimableText = "—";
+    [ObservableProperty] private CleanupItem? _selectedItem;
 
     public ICollectionView ItemsView { get; }
+    public PreviewViewModel Preview { get; } = new();
 
     public CleanupViewModel(MainViewModel main)
     {
@@ -156,7 +159,10 @@ public sealed partial class CleanupViewModel : ObservableObject, IActivatableVie
             : "Scan complete. Select items to move to the Recycle Bin, or protect files you want to keep.";
         SelectedCount = 0;
         SelectedFiles.Clear();
+        SelectedItem = Items.FirstOrDefault();
     }
+
+    partial void OnSelectedItemChanged(CleanupItem? value) => _ = Preview.LoadAsync(value?.File);
 
     public void SetSelection(System.Collections.IList selectedItems)
     {
@@ -180,9 +186,14 @@ public sealed partial class CleanupViewModel : ObservableObject, IActivatableVie
         {
             targets = SelectedFiles.ToList();
         }
+        else if (SelectedItem is { } selected)
+        {
+            targets = new List<FileEntry> { selected.File };
+        }
         else
         {
-            targets = ItemsView.Cast<CleanupItem>().Select(item => item.File).ToList();
+            _main.Notify("Select one or more files to delete.");
+            return;
         }
 
         if (targets.Count == 0)
@@ -223,6 +234,7 @@ public sealed partial class CleanupViewModel : ObservableObject, IActivatableVie
         ReclaimableText = Formats.Bytes(Items.Sum(item => item.File.Size));
         SelectedCount = 0;
         SelectedFiles.Clear();
+        SelectedItem = Items.FirstOrDefault();
         SuggestionSummary = $"{Items.Count:N0} suggestions remaining";
         _main.Notify(result.Message);
         await _main.Dashboard.RefreshSlowAsync();
@@ -235,7 +247,9 @@ public sealed partial class CleanupViewModel : ObservableObject, IActivatableVie
     {
         var targets = SelectedFiles.Count > 0
             ? SelectedFiles.ToList()
-            : ItemsView.Cast<CleanupItem>().Select(item => item.File).ToList();
+            : SelectedItem is { } selected
+                ? new List<FileEntry> { selected.File }
+                : new List<FileEntry>();
 
         if (targets.Count == 0)
         {
@@ -257,6 +271,144 @@ public sealed partial class CleanupViewModel : ObservableObject, IActivatableVie
         ReclaimableText = Formats.Bytes(Items.Sum(item => item.File.Size));
         SelectedCount = 0;
         SelectedFiles.Clear();
+        SelectedItem = Items.FirstOrDefault();
         _main.Notify($"{targets.Count} file(s) protected from future cleanup suggestions.");
+    }
+
+    // ------------------------------------------------------- per-file actions
+
+    private FileEntry? TargetFile => SelectedItem?.File;
+
+    [RelayCommand]
+    private void TogglePreview() => Preview.ToggleVisibility();
+
+    [RelayCommand]
+    private void Open()
+    {
+        if (TargetFile is not { } file)
+        {
+            return;
+        }
+
+        _main.Notify(FileOperations.Open(file.FullPath).Message);
+    }
+
+    [RelayCommand]
+    private void Reveal()
+    {
+        if (TargetFile is not { } file)
+        {
+            return;
+        }
+
+        _main.Notify(FileOperations.RevealInExplorer(file.FullPath).Message);
+    }
+
+    [RelayCommand]
+    private void OpenContainingFolder()
+    {
+        if (TargetFile is not { } file)
+        {
+            return;
+        }
+
+        _main.Notify(FileOperations.OpenFolder(file.Folder).Message);
+    }
+
+    [RelayCommand]
+    private async Task RenameAsync()
+    {
+        if (TargetFile is not { } file)
+        {
+            return;
+        }
+
+        var newName = DialogService.Prompt("Rename file", "Enter a new name for this file:", file.Name, "Rename");
+        if (string.IsNullOrWhiteSpace(newName) || newName.Trim() == file.Name)
+        {
+            return;
+        }
+
+        var name = newName.Trim();
+        var result = FileOperations.Rename(file.FullPath, name);
+        if (!result.Success)
+        {
+            DialogService.Info("Rename failed", result.Message);
+            return;
+        }
+
+        var newPath = Path.Combine(file.Folder, name);
+        var extension = Path.GetExtension(newPath).ToLowerInvariant();
+        var category = FileKinds.CategoryOf(extension, newPath);
+        var isScreenshot = FileKinds.IsScreenshot(name, newPath, extension);
+
+        AppHost.Database.UpdateAfterRename(file.Id, newPath, name, extension, category, isScreenshot);
+        file.FullPath = newPath;
+        file.Name = name;
+        file.Extension = extension;
+        file.Category = category;
+        file.IsScreenshot = isScreenshot;
+
+        ItemsView.Refresh();
+        await Preview.LoadAsync(file);
+        _main.Notify(result.Message);
+    }
+
+    [RelayCommand]
+    private async Task CopyAsync()
+    {
+        if (TargetFile is not { } file)
+        {
+            return;
+        }
+
+        var dialog = new OpenFolderDialog { Title = "Copy file to folder", Multiselect = false };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        var result = await Task.Run(() => FileOperations.Copy(new[] { file.FullPath }, dialog.FolderName));
+        _main.Notify(result.Message);
+        if (!result.Success)
+        {
+            DialogService.Info("Copy failed", result.Message);
+        }
+
+        _ = _main.RunScanAsync();
+    }
+
+    [RelayCommand]
+    private async Task MoveAsync()
+    {
+        if (TargetFile is not { } file)
+        {
+            return;
+        }
+
+        var dialog = new OpenFolderDialog { Title = "Move file to folder", Multiselect = false };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        var result = await Task.Run(() => FileOperations.Move(new[] { file.FullPath }, dialog.FolderName));
+        _main.Notify(result.Message);
+        if (!result.Success)
+        {
+            DialogService.Info("Move failed", result.Message);
+            return;
+        }
+
+        AppHost.Database.DeleteRow(file.Id);
+        if (SelectedItem is { } item)
+        {
+            Items.Remove(item);
+        }
+
+        ItemCount = Items.Count;
+        ReclaimableText = Formats.Bytes(Items.Sum(entry => entry.File.Size));
+        SelectedItem = Items.FirstOrDefault();
+        _ = _main.RunScanAsync();
     }
 }

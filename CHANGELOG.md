@@ -2,6 +2,22 @@
 
 All notable changes to WinPulse are documented here. Versions follow `MAJOR.MINOR.PATCH`.
 
+## [1.0.2] - 2026-11-21
+
+Cleanup reaches feature parity with the File activity explorer.
+
+### Added
+- Shared preview pane in **Cleanup**: images, text/code, PDFs (WebView2), audio and video, plus file metadata.
+- Per-file actions in Cleanup: open, reveal, rename, copy to folder, move to folder, protect and recycle-bin delete.
+- Double-click a cleanup suggestion to open it.
+- Preview toggle in the Cleanup toolbar.
+
+### Changed
+- Delete/protect in Cleanup now act on the current selection (or the highlighted row) instead of silently using the whole list.
+
+### Fixed
+- WebView2 PDF preview no longer throws when the source changes to null (shared preview control navigates from code-behind).
+
 ## [1.0.1] - 2026-11-21
 
 Maintenance release that validates the in-app update pipeline end to end.
