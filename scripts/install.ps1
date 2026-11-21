@@ -1,4 +1,4 @@
-﻿# WinPulse installer for Windows (per-user, no admin required).
+# WinPulse installer for Windows (per-user, no admin required).
 #
 #   .\install.ps1                 install the latest GitHub release
 #   .\install.ps1 -Token $env:GITHUB_TOKEN   install from a private repository

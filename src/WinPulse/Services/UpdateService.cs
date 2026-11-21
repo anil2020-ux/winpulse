@@ -284,7 +284,7 @@ if not errorlevel 1 (
     timeout /t 1 /nobreak >nul
     goto wait
 )
-robocopy "%SRC%" "%DST%" /MIR /NFL /NDL /NJH /NJS /NP /R:3 /W:1 >nul
+robocopy "%SRC%" "%DST%" /E /NFL /NDL /NJH /NJS /NP /R:3 /W:1 >nul
 start "" "%EXE%"
 rd /s /q "%SRC%"
 (goto) 2>nul & del "%~f0"
