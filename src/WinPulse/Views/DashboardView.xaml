@@ -1,0 +1,300 @@
+<UserControl x:Class="WinPulse.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:WinPulse.Controls">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Margin="0,0,10,12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Live metrics -->
+            <Grid Grid.Row="0" Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource CardBorder}" Margin="0,0,12,0">
+                    <StackPanel>
+                        <Grid>
+                            <TextBlock Text="CPU" Style="{StaticResource SectionTitle}" />
+                            <TextBlock Text="{Binding CpuPercentText}" HorizontalAlignment="Right"
+                                       FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource BrushAccent}" />
+                        </Grid>
+                        <controls:Sparkline Height="44" Margin="0,8,0,6"
+                                            Values="{Binding CpuHistory}"
+                                            Stroke="{DynamicResource BrushAccent}"
+                                            Fill="#334C8DFF" />
+                        <TextBlock Text="{Binding Specs.CpuName}" Style="{StaticResource Muted}"
+                                   TextTrimming="CharacterEllipsis" ToolTip="{Binding Specs.CpuName}" />
+                        <TextBlock Text="{Binding Specs.CpuSummary}" Style="{StaticResource Caption}" Margin="0,3,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Style="{StaticResource CardBorder}" Margin="0,0,12,0">
+                    <StackPanel>
+                        <Grid>
+                            <TextBlock Text="MEMORY" Style="{StaticResource SectionTitle}" />
+                            <TextBlock Text="{Binding RamPercentText}" HorizontalAlignment="Right"
+                                       FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource BrushSuccess}" />
+                        </Grid>
+                        <controls:Sparkline Height="44" Margin="0,8,0,6"
+                                            Values="{Binding RamHistory}"
+                                            Stroke="{DynamicResource BrushSuccess}"
+                                            Fill="#332DD4A7" />
+                        <TextBlock Text="{Binding RamDetail}" Style="{StaticResource Muted}"
+                                   TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding Specs.RamModulesText}" Style="{StaticResource Caption}" Margin="0,3,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Style="{StaticResource CardBorder}" Margin="0,0,12,0">
+                    <StackPanel>
+                        <Grid>
+                            <TextBlock Text="SYSTEM DRIVE" Style="{StaticResource SectionTitle}" />
+                            <TextBlock Text="{Binding DiskUsedPercentText}" HorizontalAlignment="Right"
+                                       FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource BrushWarning}" />
+                        </Grid>
+                        <TextBlock Text="{Binding DiskFreeText}" Style="{StaticResource StatValue}" FontSize="26" Margin="0,10,0,2" />
+                        <TextBlock Text="free space" Style="{StaticResource Muted}" />
+                        <ProgressBar Style="{StaticResource SlimProgress}" Height="6" Margin="0,12,0,0"
+                                     Value="{Binding DiskUsedPercent, Mode=OneWay}" />
+                        <TextBlock Text="{Binding DiskTotalText, StringFormat=of {0} total}" Style="{StaticResource Caption}" Margin="0,6,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="3" Style="{StaticResource CardBorder}">
+                    <StackPanel>
+                        <Grid>
+                            <TextBlock Text="UPTIME" Style="{StaticResource SectionTitle}" />
+                            <TextBlock Text="● live" HorizontalAlignment="Right" FontSize="10"
+                                       Foreground="{DynamicResource BrushSuccess}" />
+                        </Grid>
+                        <TextBlock Text="{Binding UptimeText}" Style="{StaticResource StatValue}" FontSize="26" Margin="0,10,0,2" />
+                        <TextBlock Style="{StaticResource Muted}">
+                            <Run Text="{Binding ProcessCountText, Mode=OneWay}" /> processes running
+                        </TextBlock>
+                        <TextBlock Text="{Binding LastScanText, StringFormat=Index updated {0}}" Style="{StaticResource Caption}" Margin="0,6,0,0" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- System + quick stats -->
+            <Grid Grid.Row="1" Margin="0,0,0,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.45*" />
+                    <ColumnDefinition Width="1*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource CardBorder}" Margin="0,0,12,0">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,4">
+                            <StackPanel>
+                                <TextBlock Text="This PC" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="{Binding Specs.ComputerSummary}" Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding Specs.Architecture}" HorizontalAlignment="Right"
+                                       Style="{StaticResource Caption}" VerticalAlignment="Center" />
+                        </Grid>
+
+                        <Grid Margin="0,10,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Processor" Style="{StaticResource Caption}" Margin="0,7" />
+                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Specs.CpuName}" Style="{StaticResource Muted}"
+                                       TextWrapping="Wrap" Margin="0,5" />
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Graphics" Style="{StaticResource Caption}" Margin="0,7" />
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Specs.GpuNames}" Style="{StaticResource Muted}"
+                                       TextWrapping="Wrap" Margin="0,5" />
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Memory" Style="{StaticResource Caption}" Margin="0,7" />
+                            <TextBlock Grid.Row="2" Grid.Column="1" Style="{StaticResource Muted}" Margin="0,5" TextWrapping="Wrap">
+                                <Run Text="{Binding Specs.RamText, Mode=OneWay}" />
+                                <Run Text="  •  " /><Run Text="{Binding Specs.RamModulesText, Mode=OneWay}" />
+                            </TextBlock>
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Text="Storage" Style="{StaticResource Caption}" Margin="0,7" />
+                            <ItemsControl Grid.Row="3" Grid.Column="1" ItemsSource="{Binding Disks}" Margin="0,3">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap">
+                                            <Run Text="{Binding Drive, Mode=OneWay}" /><Run Text="  " />
+                                            <Run Text="{Binding TotalText, Mode=OneWay}" />
+                                            <Run Text="  •  " /><Run Text="{Binding FreeText, Mode=OneWay}" />
+                                        </TextBlock>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <TextBlock Grid.Row="4" Grid.Column="0" Text="Operating system" Style="{StaticResource Caption}" Margin="0,7" />
+                            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Specs.OsSummary}" Style="{StaticResource Muted}"
+                                       TextWrapping="Wrap" Margin="0,5" />
+
+                            <TextBlock Grid.Row="5" Grid.Column="0" Text="Motherboard" Style="{StaticResource Caption}" Margin="0,7" />
+                            <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding Specs.BoardText}" Style="{StaticResource Muted}"
+                                       TextWrapping="Wrap" Margin="0,5" />
+
+                            <TextBlock Grid.Row="6" Grid.Column="0" Text="BIOS" Style="{StaticResource Caption}" Margin="0,7" />
+                            <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding Specs.BiosText}" Style="{StaticResource Muted}"
+                                       TextWrapping="Wrap" Margin="0,5" />
+
+                            <TextBlock Grid.Row="7" Grid.Column="0" Text="Windows installed" Style="{StaticResource Caption}" Margin="0,7" />
+                            <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding Specs.OsInstallText}" Style="{StaticResource Muted}" Margin="0,5" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Grid Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Style="{StaticResource CardBorder}" Margin="0,0,0,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,12">
+                                <TextBlock Text="{Binding Stats.TotalFiles, StringFormat={}{0:N0}}" Style="{StaticResource StatValue}" FontSize="26" />
+                                <TextBlock Text="files indexed" Style="{StaticResource Caption}" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,12">
+                                <TextBlock Text="{Binding Stats.TotalSizeText}" Style="{StaticResource StatValue}" FontSize="26" />
+                                <TextBlock Text="tracked size" Style="{StaticResource Caption}" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="0">
+                                <TextBlock Text="{Binding Stats.NewToday}" Style="{StaticResource StatValue}" FontSize="22"
+                                           Foreground="{DynamicResource BrushSuccess}" />
+                                <TextBlock Text="new today" Style="{StaticResource Caption}" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="1">
+                                <TextBlock Text="{Binding Stats.OldDownloads}" Style="{StaticResource StatValue}" FontSize="22"
+                                           Foreground="{DynamicResource BrushWarning}" />
+                                <TextBlock Text="stale downloads" Style="{StaticResource Caption}" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Row="1" Style="{StaticResource CardBorder}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+                            <Grid Grid.Row="0" Margin="0,0,0,6">
+                                <TextBlock Text="Recent activity" Style="{StaticResource CardTitle}" />
+                                <Button Content="View all"
+                                        Style="{StaticResource GhostButton}"
+                                        HorizontalAlignment="Right"
+                                        FontSize="11"
+                                        Padding="6,2"
+                                        Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                        CommandParameter="File activity" />
+                            </Grid>
+                            <ItemsControl Grid.Row="1" ItemsSource="{Binding RecentActivity}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,5">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="28" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0"
+                                                       Text="{Binding Glyph}"
+                                                       FontFamily="{DynamicResource FontIcons}"
+                                                       FontSize="13"
+                                                       Foreground="{DynamicResource BrushAccent}"
+                                                       VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Name}" FontSize="12.5" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Style="{StaticResource Caption}">
+                                                    <Run Text="{Binding KindLabel, Mode=OneWay}" /><Run Text="  •  " /><Run Text="{Binding SizeText, Mode=OneWay}" />
+                                                </TextBlock>
+                                            </StackPanel>
+                                            <TextBlock Grid.Column="2" Text="{Binding AtText}" Style="{StaticResource Caption}" VerticalAlignment="Center" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <TextBlock Grid.Row="1"
+                                       Text="No activity yet — run a scan to start tracking files."
+                                       Style="{StaticResource Muted}"
+                                       TextWrapping="Wrap"
+                                       Margin="0,12,0,0"
+                                       Visibility="{Binding RecentActivity.Count, Converter={StaticResource EmptyToVis}}" />
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+
+            <!-- Storage mix -->
+            <Border Grid.Row="2" Style="{StaticResource CardBorder}">
+                <StackPanel>
+                    <Grid Margin="0,0,0,10">
+                        <TextBlock Text="Storage by file type" Style="{StaticResource CardTitle}" />
+                        <TextBlock Text="{Binding Stats.TotalSizeText, StringFormat={}{0} indexed}" Style="{StaticResource Caption}"
+                                   HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    </Grid>
+                    <ItemsControl ItemsSource="{Binding Categories}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="3" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,6,24,6">
+                                    <Grid>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Glyph}" FontFamily="{DynamicResource FontIcons}"
+                                                       FontSize="12" VerticalAlignment="Center"
+                                                       Foreground="{Binding ColorKey, Converter={StaticResource CategoryBrush}}" />
+                                            <TextBlock Text="{Binding Category}" FontSize="12" FontWeight="SemiBold" Margin="8,0,0,0" />
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding SizeText}" FontSize="11" HorizontalAlignment="Right"
+                                                   Foreground="{DynamicResource BrushTextSecondary}" />
+                                    </Grid>
+                                    <ProgressBar Style="{StaticResource SlimProgress}" Margin="0,6,0,2"
+                                                 Height="4" Value="{Binding Percent, Mode=OneWay}" />
+                                    <TextBlock Text="{Binding CountText}" Style="{StaticResource Caption}" FontSize="10" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="No files indexed yet — WinPulse scans your Downloads, Desktop, Documents and Pictures folders."
+                               Style="{StaticResource Muted}"
+                               TextWrapping="Wrap"
+                               Margin="0,8,0,0"
+                               Visibility="{Binding Categories.Count, Converter={StaticResource EmptyToVis}}" />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

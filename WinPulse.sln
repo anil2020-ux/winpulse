@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E09B6AB7-E63F-4188-8D2D-06C488B73EB5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinPulse", "src\WinPulse\WinPulse.csproj", "{CB8B4E9A-CD35-4186-B90E-DF279D4DBFB2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CB8B4E9A-CD35-4186-B90E-DF279D4DBFB2}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{CB8B4E9A-CD35-4186-B90E-DF279D4DBFB2}.Debug|Any CPU.Build.0 = Debug|x64
+		{CB8B4E9A-CD35-4186-B90E-DF279D4DBFB2}.Release|Any CPU.ActiveCfg = Release|x64
+		{CB8B4E9A-CD35-4186-B90E-DF279D4DBFB2}.Release|Any CPU.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{CB8B4E9A-CD35-4186-B90E-DF279D4DBFB2} = {E09B6AB7-E63F-4188-8D2D-06C488B73EB5}
+	EndGlobalSection
+EndGlobal

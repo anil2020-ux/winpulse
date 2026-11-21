@@ -1,0 +1,308 @@
+<Window x:Class="WinPulse.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:WinPulse.ViewModels"
+        xmlns:views="clr-namespace:WinPulse.Views"
+        Title="WinPulse"
+        Width="1440" Height="900"
+        MinWidth="1180" MinHeight="720"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        ResizeMode="CanResize"
+        Background="{DynamicResource BrushBg}"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="46"
+                      ResizeBorderThickness="6"
+                      GlassFrameThickness="0"
+                      CornerRadius="0"
+                      UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
+            <views:DashboardView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:FilesViewModel}">
+            <views:FilesView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ProcessesViewModel}">
+            <views:ProcessesView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AppsViewModel}">
+            <views:AppsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CleanupViewModel}">
+            <views:CleanupView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+            <views:SettingsView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:NavItem}">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="{Binding Glyph}"
+                           FontFamily="{DynamicResource FontIcons}"
+                           FontSize="16"
+                           Width="26"
+                           VerticalAlignment="Center" />
+                <TextBlock Text="{Binding Title}"
+                           FontSize="13"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center" />
+            </StackPanel>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Border BorderBrush="{DynamicResource BrushBorder}" BorderThickness="1" Background="{DynamicResource BrushBg}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="46" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="34" />
+            </Grid.RowDefinitions>
+
+            <!-- ================= Title bar ================= -->
+            <Grid Grid.Row="0" Background="{DynamicResource BrushSidebar}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="16,0,0,0" VerticalAlignment="Center">
+                    <Image Source="pack://application:,,,/Assets/App.ico" Width="22" Height="22"
+                           RenderOptions.BitmapScalingMode="HighQuality" />
+                    <TextBlock Text="WinPulse" FontSize="14" FontWeight="Bold" Margin="10,0,0,0" VerticalAlignment="Center" />
+                    <Border Style="{StaticResource PillBorder}" Margin="10,0,0,0" Padding="7,2">
+                        <TextBlock Text="{Binding VersionText}" FontSize="9.5"
+                                   Foreground="{DynamicResource BrushTextMuted}" />
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0"
+                            WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button Style="{StaticResource GhostButton}" Padding="10,5" FontSize="11" Margin="0,0,6,0"
+                            Command="{Binding OpenUpdatePanelCommand}"
+                            Visibility="{Binding UpdateAvailable, Converter={StaticResource BoolToVis}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE896;" FontFamily="{DynamicResource FontIcons}" FontSize="12"
+                                       Foreground="{DynamicResource BrushSuccess}" VerticalAlignment="Center" />
+                            <TextBlock Text="Update available" Margin="6,0,0,0" FontSize="11"
+                                       Foreground="{DynamicResource BrushSuccess}" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource TitleBarButton}" ToolTip="Toggle theme"
+                            Click="ToggleTheme_Click">
+                        <TextBlock Text="&#xE793;" FontFamily="{DynamicResource FontIcons}" FontSize="12" />
+                    </Button>
+                    <Button Style="{StaticResource TitleBarButton}" ToolTip="Minimize" Click="Minimize_Click">
+                        <TextBlock Text="&#xE921;" FontFamily="{DynamicResource FontIcons}" FontSize="10" />
+                    </Button>
+                    <Button Style="{StaticResource TitleBarButton}" ToolTip="Maximize" Click="Maximize_Click">
+                        <TextBlock Text="&#xE922;" FontFamily="{DynamicResource FontIcons}" FontSize="10" />
+                    </Button>
+                    <Button Style="{StaticResource CloseTitleButton}" ToolTip="Close" Click="Close_Click">
+                        <TextBlock Text="&#xE8BB;" FontFamily="{DynamicResource FontIcons}" FontSize="10" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- ================= Body ================= -->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="248" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Sidebar -->
+                <Border Grid.Column="0" Background="{DynamicResource BrushSidebar}"
+                        BorderBrush="{DynamicResource BrushBorderSoft}" BorderThickness="0,1,1,0">
+                    <Grid Margin="12,14,12,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Text="WORKSPACE" Style="{StaticResource SectionTitle}" Margin="10,0,0,8" />
+
+                        <ListBox Grid.Row="1"
+                                 Style="{StaticResource NavList}"
+                                 ItemsSource="{Binding Navigation}"
+                                 SelectedItem="{Binding SelectedNav, Mode=TwoWay}" />
+
+                        <StackPanel Grid.Row="2">
+                            <Border Style="{StaticResource SoftCard}" Padding="12" Margin="0,8,0,8">
+                                <StackPanel>
+                                    <TextBlock Text="LOCAL INDEX" Style="{StaticResource SectionTitle}" FontSize="9" />
+                                    <TextBlock Text="{Binding IndexedSummary}" Style="{StaticResource Caption}" Margin="0,4,0,0"
+                                               TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource Caption}" Margin="0,6,0,0"
+                                               TextWrapping="Wrap" MaxHeight="34" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </Border>
+                            <Button Content="Check for updates" Style="{StaticResource GhostButton}" FontSize="11"
+                                    HorizontalAlignment="Left" Padding="8,4"
+                                    Command="{Binding CheckForUpdatesCommand}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Content -->
+                <Grid Grid.Column="1" Margin="22,16,18,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,10,16">
+                        <StackPanel>
+                            <TextBlock Text="{Binding SelectedNav.Title}" FontSize="23" FontWeight="Bold" />
+                            <TextBlock Text="{Binding SelectedNav.Subtitle}" Style="{StaticResource Muted}" Margin="0,3,0,0" />
+                        </StackPanel>
+
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <StackPanel Margin="0,0,12,0" VerticalAlignment="Center"
+                                        Visibility="{Binding IsScanning, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Text="{Binding ScanDetail}" Style="{StaticResource Caption}"
+                                           HorizontalAlignment="Right" MaxWidth="300" TextTrimming="CharacterEllipsis" />
+                                <ProgressBar Style="{StaticResource SlimProgress}" Width="200" Height="5" Margin="0,6,0,0"
+                                             Value="{Binding ScanProgress, Mode=OneWay}" />
+                            </StackPanel>
+                            <Button Style="{StaticResource PrimaryButton}" Command="{Binding ScanNowCommand}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE72C;" FontFamily="{DynamicResource FontIcons}" FontSize="13"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock Text="Scan now" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+
+                    <ContentControl Grid.Row="1" Content="{Binding SelectedNav.ViewModel}" />
+                </Grid>
+            </Grid>
+
+            <!-- ================= Status bar ================= -->
+            <Border Grid.Row="2" Background="{DynamicResource BrushSidebar}"
+                    BorderBrush="{DynamicResource BrushBorderSoft}" BorderThickness="0,1,0,0">
+                <Grid Margin="16,0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="&#xE73E;" FontFamily="{DynamicResource FontIcons}" FontSize="10"
+                                   Foreground="{DynamicResource BrushSuccess}" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource Caption}" Margin="8,0,0,0"
+                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="720" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding IndexedSummary}" Style="{StaticResource Caption}" Margin="0,0,14,0" />
+                        <TextBlock Text="GitHub" Style="{StaticResource Caption}" Margin="0,0,14,0" Cursor="Hand"
+                                   MouseLeftButtonUp="OpenGitHub_Click" />
+                        <TextBlock Text="{Binding VersionText, StringFormat=WinPulse {0}}" Style="{StaticResource Caption}" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- ================= Update overlay ================= -->
+            <Grid Grid.RowSpan="3" Background="#C4070A10"
+                  Visibility="{Binding UpdatePanelOpen, Converter={StaticResource BoolToVis}}">
+                <Border Style="{StaticResource CardBorder}"
+                        Width="660"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        Padding="0">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="40" ShadowDepth="10" Opacity="0.5" Color="Black" />
+                    </Border.Effect>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Margin="24,20,18,0">
+                            <StackPanel>
+                                <TextBlock Text="Software update" FontSize="19" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding LatestUpdate.Headline, TargetNullValue=WinPulse is up to date}"
+                                           Style="{StaticResource Muted}" Margin="0,4,0,0" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Style="{StaticResource IconButton}" HorizontalAlignment="Right" VerticalAlignment="Top"
+                                    Content="&#xE8BB;" Command="{Binding CloseUpdatePanelCommand}" />
+                        </Grid>
+
+                        <Grid Grid.Row="1" Margin="24,18,24,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="CURRENT" Style="{StaticResource SectionTitle}" FontSize="9" />
+                                <TextBlock Text="{Binding VersionText}" FontSize="16" FontWeight="SemiBold" Margin="0,4,0,0" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="LATEST" Style="{StaticResource SectionTitle}" FontSize="9" />
+                                <TextBlock Text="{Binding LatestUpdate.Version, TargetNullValue=—}" FontSize="16"
+                                           FontWeight="SemiBold" Foreground="{DynamicResource BrushSuccess}" Margin="0,4,0,0" />
+                            </StackPanel>
+                        </Grid>
+
+                        <ScrollViewer Grid.Row="2" MaxHeight="230" Margin="24,16,24,0"
+                                      VerticalScrollBarVisibility="Auto">
+                            <TextBlock Text="{Binding LatestUpdate.Notes, TargetNullValue=No release notes for this version.}"
+                                       Style="{StaticResource Muted}" TextWrapping="Wrap" />
+                        </ScrollViewer>
+
+                        <StackPanel Grid.Row="3" Margin="24,20,24,22">
+                            <TextBlock Text="{Binding UpdateStatus}" Style="{StaticResource Caption}"
+                                       TextWrapping="Wrap" Margin="0,0,0,10" />
+
+                            <ProgressBar Style="{StaticResource SlimProgress}" Height="6"
+                                         Value="{Binding DownloadProgress, Mode=OneWay}"
+                                         Margin="0,0,0,12"
+                                         Visibility="{Binding IsDownloadingUpdate, Converter={StaticResource BoolToVis}}" />
+
+                            <Grid>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="Download update"
+                                            Margin="0,0,8,0"
+                                            Command="{Binding DownloadUpdateCommand}">
+                                        <Button.Style>
+                                            <Style TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsUpdateReady}" Value="True">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding LatestUpdate}" Value="{x:Null}">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+
+                                    <Button Content="Install and restart" Style="{StaticResource PrimaryButton}"
+                                            Margin="0,0,8,0"
+                                            Command="{Binding InstallUpdateCommand}"
+                                            Visibility="{Binding IsUpdateReady, Converter={StaticResource BoolToVis}}" />
+
+                                    <Button Content="View on GitHub" Style="{StaticResource GhostButton}"
+                                            Command="{Binding OpenReleasesCommand}" />
+                                </StackPanel>
+
+                                <Button Content="Close" Style="{StaticResource SecondaryButton}"
+                                        HorizontalAlignment="Right"
+                                        Command="{Binding CloseUpdatePanelCommand}" />
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

@@ -1,0 +1,225 @@
+<UserControl x:Class="WinPulse.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <Grid Margin="0,0,10,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1.15*" />
+                <ColumnDefinition Width="1*" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                <!-- Watched folders -->
+                <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,4">
+                            <StackPanel>
+                                <TextBlock Text="Watched folders" Style="{StaticResource CardTitle}" />
+                                <TextBlock Text="WinPulse indexes these folders and tracks new files."
+                                           Style="{StaticResource Caption}" Margin="0,3,0,0" />
+                            </StackPanel>
+                            <Button Content="Add folder" Style="{StaticResource SmallButton}" HorizontalAlignment="Right"
+                                    VerticalAlignment="Top" Command="{Binding AddFolderCommand}" />
+                        </Grid>
+
+                        <ItemsControl ItemsSource="{Binding Roots}" Margin="0,10,0,0">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource SoftCard}" Margin="0,0,0,8">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding Display}" FontWeight="SemiBold" FontSize="13" />
+                                                    <TextBlock FontSize="10" Margin="10,0,0,0" VerticalAlignment="Center">
+                                                        <TextBlock.Style>
+                                                            <Style TargetType="TextBlock">
+                                                                <Setter Property="Text" Value="Paused" />
+                                                                <Setter Property="Foreground" Value="{DynamicResource BrushTextMuted}" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding Enabled}" Value="True">
+                                                                        <Setter Property="Text" Value="Tracking" />
+                                                                        <Setter Property="Foreground" Value="{DynamicResource BrushSuccess}" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </TextBlock.Style>
+                                                    </TextBlock>
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding Path}" Style="{StaticResource Caption}" Margin="0,3,0,0"
+                                                           TextTrimming="CharacterEllipsis" ToolTip="{Binding Path}" />
+                                                <TextBlock Style="{StaticResource Caption}" Margin="0,2,0,0">
+                                                    <Run Text="{Binding CountText, Mode=OneWay}" /><Run Text="  •  " /><Run Text="{Binding SizeText, Mode=OneWay}" />
+                                                </TextBlock>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Button Content="Pause/Resume" Style="{StaticResource SmallButton}" FontSize="11"
+                                                        Margin="0,0,6,0"
+                                                        Command="{Binding DataContext.ToggleRootCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                        CommandParameter="{Binding}" />
+                                                <Button Content="&#xE74D;" FontFamily="{DynamicResource FontIcons}" Style="{StaticResource IconButton}"
+                                                        Width="30" Height="30" FontSize="12" Foreground="{DynamicResource BrushDanger}"
+                                                        ToolTip="Stop tracking this folder"
+                                                        Command="{Binding DataContext.RemoveRootCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                        CommandParameter="{Binding}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Text="No folders tracked yet. Add Downloads, Desktop or any folder you want to keep an eye on."
+                                   Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,6,0,0"
+                                   Visibility="{Binding Roots.Count, Converter={StaticResource EmptyToVis}}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Scanning -->
+                <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="Scanning" Style="{StaticResource CardTitle}" />
+                        <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                            <TextBlock Text="Scan every" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="0,0,10,0" />
+                            <ComboBox Style="{StaticResource ComboTheme}" Width="88"
+                                      ItemsSource="{Binding ScanIntervals}"
+                                      SelectedItem="{Binding ScanIntervalMinutes}" />
+                            <TextBlock Text="minutes" Style="{StaticResource Muted}" VerticalAlignment="Center" Margin="10,0,0,0" />
+                        </StackPanel>
+                        <ToggleButton Style="{StaticResource Switch}" Content="Scan automatically in the background"
+                                      IsChecked="{Binding AutoScan}" Margin="0,16,0,0" HorizontalAlignment="Left" />
+                        <ToggleButton Style="{StaticResource Switch}" Content="Watch folders for changes in real time"
+                                      IsChecked="{Binding WatchFolders}" Margin="0,14,0,0" HorizontalAlignment="Left" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Appearance -->
+                <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="Appearance" Style="{StaticResource CardTitle}" />
+                        <ToggleButton Style="{StaticResource Switch}" Content="Dark theme"
+                                      IsChecked="{Binding Main.IsDarkTheme, Mode=TwoWay}" Margin="0,14,0,0" HorizontalAlignment="Left" />
+                        <TextBlock Text="The theme switch is also available in the title bar."
+                                   Style="{StaticResource Caption}" Margin="0,8,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Startup -->
+                <Border Style="{StaticResource CardBorder}">
+                    <StackPanel>
+                        <TextBlock Text="Startup" Style="{StaticResource CardTitle}" />
+                        <ToggleButton Style="{StaticResource Switch}" Content="Start WinPulse with Windows"
+                                      IsChecked="{Binding StartWithWindows}" Margin="0,14,0,0" HorizontalAlignment="Left" />
+                        <TextBlock Text="Runs in the background so your activity is always tracked."
+                                   Style="{StaticResource Caption}" Margin="0,8,0,0" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1">
+                <!-- Updates -->
+                <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <Grid>
+                            <TextBlock Text="Updates" Style="{StaticResource CardTitle}" />
+                            <TextBlock Text="{Binding VersionText}" Style="{StaticResource Caption}" HorizontalAlignment="Right"
+                                       VerticalAlignment="Center" />
+                        </Grid>
+                        <ToggleButton Style="{StaticResource Switch}" Content="Check for updates automatically"
+                                      IsChecked="{Binding AutoUpdate}" Margin="0,14,0,0" HorizontalAlignment="Left" />
+                        <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                            <Button Content="Check now" Style="{StaticResource SmallButton}" Margin="0,0,8,0"
+                                    Command="{Binding CheckUpdatesCommand}" />
+                            <Button Content="View releases" Style="{StaticResource SmallButton}"
+                                    Command="{Binding OpenRepoCommand}" />
+                        </StackPanel>
+                        <TextBlock Text="Updates download and install inside the app — no manual downloads."
+                                   Style="{StaticResource Caption}" Margin="0,10,0,0" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding Main.UpdateStatus}" Style="{StaticResource Caption}" Margin="0,6,0,0"
+                                   Foreground="{DynamicResource BrushSuccess}" TextWrapping="Wrap" />
+                        <Border Style="{StaticResource SoftCard}" Margin="0,12,0,0">
+                            <StackPanel>
+                                <TextBlock Text="GitHub token (optional)" Style="{StaticResource Caption}" />
+                                <TextBlock Text="Only needed if the repository stays private. Stored locally."
+                                           Style="{StaticResource Caption}" Margin="0,2,0,0" TextWrapping="Wrap" />
+                                <Grid Margin="0,8,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Grid.Column="0" Style="{StaticResource InputBox}" FontSize="11"
+                                             Text="{Binding GithubToken, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0" />
+                                    <Button Grid.Column="1" Content="Save" Style="{StaticResource SmallButton}"
+                                            Command="{Binding SaveTokenCommand}" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <!-- Data -->
+                <Border Style="{StaticResource CardBorder}" Margin="0,0,0,12">
+                    <StackPanel>
+                        <TextBlock Text="Local data" Style="{StaticResource CardTitle}" />
+                        <Grid Margin="0,12,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,0,10">
+                                <TextBlock Text="{Binding Stats.TotalFiles, StringFormat={}{0:N0}}" FontSize="20" FontWeight="SemiBold" />
+                                <TextBlock Text="files indexed" Style="{StaticResource Caption}" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,10">
+                                <TextBlock Text="{Binding Stats.TotalSizeText}" FontSize="20" FontWeight="SemiBold" />
+                                <TextBlock Text="indexed size" Style="{StaticResource Caption}" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="0">
+                                <TextBlock Text="{Binding Stats.LastScanText}" Style="{StaticResource Muted}" />
+                                <TextBlock Text="last scan" Style="{StaticResource Caption}" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="1">
+                                <TextBlock Text="{Binding Stats.Screenshots, StringFormat={}{0:N0}}" Style="{StaticResource Muted}" />
+                                <TextBlock Text="screenshots tracked" Style="{StaticResource Caption}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock Text="{Binding DataFolderText}" Style="{StaticResource Caption}" Margin="0,14,0,0"
+                                   TextTrimming="CharacterEllipsis" ToolTip="{Binding DataFolderText}" />
+                        <WrapPanel Margin="0,10,0,0">
+                            <Button Content="Open data folder" Style="{StaticResource SmallButton}" Margin="0,0,8,8"
+                                    Command="{Binding OpenDataFolderCommand}" />
+                            <Button Content="Open logs" Style="{StaticResource SmallButton}" Margin="0,0,8,8"
+                                    Command="{Binding OpenLogsCommand}" />
+                            <Button Content="Clear index" Style="{StaticResource SmallButton}" Margin="0,0,8,8"
+                                    Foreground="{DynamicResource BrushDanger}"
+                                    Command="{Binding ClearIndexCommand}" />
+                        </WrapPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- About -->
+                <Border Style="{StaticResource CardBorder}">
+                    <StackPanel>
+                        <TextBlock Text="About WinPulse" Style="{StaticResource CardTitle}" />
+                        <TextBlock Text="A local-first Windows companion that shows what your PC is doing and what is piling up in your folders. Everything stays on this machine."
+                                   Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,10,0,0" />
+                        <TextBlock Text="{Binding VersionText}" Style="{StaticResource Caption}" Margin="0,12,0,0" />
+                        <TextBlock Text="{Binding StatusNote}" Style="{StaticResource Caption}" Margin="0,4,0,0"
+                                   Foreground="{DynamicResource BrushSuccess}" TextWrapping="Wrap" />
+                        <Button Content="Open on GitHub" Style="{StaticResource SecondaryButton}" HorizontalAlignment="Left"
+                                Margin="0,14,0,0" Command="{Binding OpenRepoCommand}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</UserControl>
