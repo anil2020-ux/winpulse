@@ -28,6 +28,7 @@ public sealed partial class MainViewModel : ObservableObject
     private string? _downloadedUpdatePath;
     private CancellationTokenSource? _paletteCts;
     private bool _lowDiskNotified;
+    private DateTime _lastDiskSampleUtc = DateTime.MinValue;
 
     public DashboardViewModel Dashboard { get; }
     public FilesViewModel Files { get; }
@@ -167,6 +168,15 @@ public sealed partial class MainViewModel : ObservableObject
             var snapshot = await Task.Run(() => AppHost.Performance.Sample()).ConfigureAwait(true);
             Performance = snapshot;
             Dashboard.UpdatePerformance(snapshot);
+
+            // Persist a disk-space sample every five minutes for the dashboard history chart.
+            if (snapshot.DiskTotalBytes > 0 && DateTime.UtcNow - _lastDiskSampleUtc >= TimeSpan.FromMinutes(5))
+            {
+                _lastDiskSampleUtc = DateTime.UtcNow;
+                var freeBytes = snapshot.DiskFreeBytes;
+                var totalBytes = snapshot.DiskTotalBytes;
+                _ = Task.Run(() => AppHost.Database.AddDiskSample(freeBytes, totalBytes));
+            }
 
             // Low disk warning once per crossing, with tray balloon.
             if (snapshot.DiskFreeBytes > 0 && snapshot.DiskFreeBytes < 15L * 1024 * 1024 * 1024)
@@ -568,7 +578,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
-    private async Task UpdatePaletteAsync(string query)
+    public async Task<IReadOnlyList<PaletteItem>> BuildPaletteResultsAsync(string query)
     {
         var trimmed = query.Trim();
         var results = new List<PaletteItem>();
@@ -612,6 +622,12 @@ public sealed partial class MainViewModel : ObservableObject
             Log.Warn("Palette file search failed: " + ex.Message);
         }
 
+        return results;
+    }
+
+    private async Task UpdatePaletteAsync(string query)
+    {
+        var results = await BuildPaletteResultsAsync(query).ConfigureAwait(true);
         if (!IsPaletteOpen)
         {
             return;
@@ -639,11 +655,14 @@ public sealed partial class MainViewModel : ObservableObject
     public void ExecutePaletteSelection()
     {
         var item = PaletteResults.ElementAtOrDefault(PaletteSelectedIndex);
-        if (item is null)
+        if (item is not null)
         {
-            return;
+            ExecutePaletteItem(item);
         }
+    }
 
+    public void ExecutePaletteItem(PaletteItem item)
+    {
         ClosePalette();
 
         if (item.Kind == "file" && item.File is not null)
@@ -688,6 +707,25 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     // ---------------------------------------------------------------- helpers
+
+    /// <summary>Opens Cleanup, waits for the duplicate scan and opens the review dialog.</summary>
+    public async Task OpenDuplicateReviewWhenReadyAsync()
+    {
+        Navigate("Cleanup");
+        for (var attempt = 0; attempt < 120 && Cleanup.DuplicateGroups.Count == 0; attempt++)
+        {
+            await Task.Delay(500).ConfigureAwait(true);
+        }
+
+        if (Cleanup.DuplicateGroups.Count > 0)
+        {
+            Cleanup.ReviewDuplicatesCommand.Execute(null);
+        }
+        else
+        {
+            Notify("No duplicate groups found to review.");
+        }
+    }
 
     public void Notify(string message)
     {

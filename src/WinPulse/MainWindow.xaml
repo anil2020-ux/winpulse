@@ -62,9 +62,11 @@
         <tb:TaskbarIcon x:Key="TrayIcon"
                         IconSource="/Assets/App.ico"
                         ToolTipText="WinPulse — activity &amp; file tracker"
+                        TrayLeftMouseUp="TrayIcon_TrayLeftMouseUp"
                         TrayMouseDoubleClick="TrayIcon_TrayMouseDoubleClick">
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu>
+                    <MenuItem Header="Quick search   Ctrl+Shift+Space" Click="TrayQuickSearch_Click" />
                     <MenuItem Header="Open WinPulse" Click="TrayOpen_Click" />
                     <MenuItem Header="Scan now" Click="TrayScan_Click" />
                     <Separator />

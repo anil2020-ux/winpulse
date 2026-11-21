@@ -113,6 +113,18 @@ public partial class App : Application
                 new Action(() => viewModel.OpenPaletteCommand.Execute(null)),
                 System.Windows.Threading.DispatcherPriority.ApplicationIdle);
         }
+
+        if (e.Args.Any(argument => argument.Equals("--quick-search", StringComparison.OrdinalIgnoreCase)))
+        {
+            Dispatcher.BeginInvoke(
+                new Action(window.ShowQuickSearch),
+                System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+        }
+
+        if (e.Args.Any(argument => argument.Equals("--review-duplicates", StringComparison.OrdinalIgnoreCase)))
+        {
+            _ = viewModel.OpenDuplicateReviewWhenReadyAsync();
+        }
     }
 
     private static string NormalizeViewName(string value) => value.Trim().ToLowerInvariant() switch

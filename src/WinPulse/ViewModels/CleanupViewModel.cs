@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Windows;
 using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -7,6 +8,7 @@ using Microsoft.Win32;
 using WinPulse.Core;
 using WinPulse.Models;
 using WinPulse.Services;
+using WinPulse.Views;
 
 namespace WinPulse.ViewModels;
 
@@ -16,6 +18,7 @@ public sealed partial class CleanupViewModel : ObservableObject, IActivatableVie
     private readonly MainViewModel _main;
 
     public ObservableCollection<CleanupItem> Items { get; } = new();
+    public ObservableCollection<DuplicateGroup> DuplicateGroups { get; } = new();
     public ObservableCollection<FileEntry> SelectedFiles { get; } = new();
 
     public IReadOnlyList<string> FilterOptions { get; } = new[]
@@ -123,6 +126,11 @@ public sealed partial class CleanupViewModel : ObservableObject, IActivatableVie
     private void BuildItems(CleanupReport report)
     {
         Items.Clear();
+        DuplicateGroups.Clear();
+        foreach (var group in report.Duplicates)
+        {
+            DuplicateGroups.Add(group);
+        }
 
         foreach (var file in report.LargeFiles)
         {
@@ -278,6 +286,45 @@ public sealed partial class CleanupViewModel : ObservableObject, IActivatableVie
     // ------------------------------------------------------- per-file actions
 
     [RelayCommand]
+    private void ReviewDuplicates()
+    {
+        if (DuplicateGroups.Count == 0)
+        {
+            _main.Notify("No duplicate groups found. Run a cleanup scan first.");
+            return;
+        }
+
+        var window = new DuplicateReviewWindow(DuplicateGroups, OnDuplicatesChanged)
+        {
+            Owner = Application.Current.MainWindow,
+        };
+
+        window.ShowDialog();
+
+        // Drop flattened suggestion rows whose files are gone.
+        var remainingIds = DuplicateGroups
+            .SelectMany(group => group.Files)
+            .Select(file => file.Id)
+            .ToHashSet();
+
+        foreach (var item in Items
+                     .Where(item => item.Reason == "Duplicate copy" && !remainingIds.Contains(item.File.Id))
+                     .ToList())
+        {
+            Items.Remove(item);
+        }
+
+        ItemCount = Items.Count;
+        ReclaimableText = Formats.Bytes(Items.Sum(item => item.File.Size));
+        SelectedItem = Items.FirstOrDefault();
+        _ = _main.Dashboard.RefreshSlowAsync();
+        _main.UpdateIndexSummary();
+        _ = _main.Files.ReloadAsync();
+    }
+
+    private void OnDuplicatesChanged() => _main.Notify("Duplicate copies recycled.");
+
+    [RelayCommand]
     private async Task DeleteDuplicateCopiesAsync()
     {
         var targets = Items
@@ -322,6 +369,7 @@ public sealed partial class CleanupViewModel : ObservableObject, IActivatableVie
         ItemCount = Items.Count;
         ReclaimableText = Formats.Bytes(Items.Sum(item => item.File.Size));
         SelectedItem = Items.FirstOrDefault();
+        DuplicateGroups.Clear();
         _main.Notify(result.Message);
         await _main.Dashboard.RefreshSlowAsync();
         _main.UpdateIndexSummary();

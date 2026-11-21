@@ -107,6 +107,12 @@ public static class SelfTest
             var stats = db.GetStats(30);
             Check("stats counted files", stats.TotalFiles >= 5, stats.TotalFiles.ToString());
 
+            db.AddDiskSample(400L * 1024 * 1024 * 1024, 950L * 1024 * 1024 * 1024);
+            db.AddDiskSample(398L * 1024 * 1024 * 1024, 950L * 1024 * 1024 * 1024);
+            var diskHistory = db.GetDiskHistory(DateTime.Now.AddDays(-1));
+            Check("disk history persists samples", diskHistory.Count >= 2 && diskHistory[0].FreeBytes > 0,
+                diskHistory.Count.ToString());
+
             db.ClearIndex();
             Check("clear index empties table", db.QueryFiles(new FileQuery { Limit = 10 }, out var afterClear).Count == 0 && afterClear == 0);
 

@@ -31,6 +31,12 @@ public sealed class Sparkline : FrameworkElement
         typeof(Sparkline),
         new FrameworkPropertyMetadata(100.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
+    public static readonly DependencyProperty AutoScaleProperty = DependencyProperty.Register(
+        nameof(AutoScale),
+        typeof(bool),
+        typeof(Sparkline),
+        new FrameworkPropertyMetadata(false, FrameworkPropertyMetadataOptions.AffectsRender));
+
     private INotifyCollectionChanged? _observed;
 
     public IEnumerable<double>? Values
@@ -55,6 +61,13 @@ public sealed class Sparkline : FrameworkElement
     {
         get => (double)GetValue(MaxValueProperty);
         set => SetValue(MaxValueProperty, value);
+    }
+
+    /// <summary>Scale to the min/max of the series instead of 0..MaxValue (useful for GB charts).</summary>
+    public bool AutoScale
+    {
+        get => (bool)GetValue(AutoScaleProperty);
+        set => SetValue(AutoScaleProperty, value);
     }
 
     private static void OnValuesChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -93,16 +106,27 @@ public sealed class Sparkline : FrameworkElement
             return;
         }
 
+        var minimum = 0.0;
         var maximum = MaxValue > 0 ? MaxValue : Math.Max(1, values.Max());
+        if (AutoScale)
+        {
+            minimum = values.Min();
+            maximum = values.Max();
+            if (maximum - minimum < 0.0001)
+            {
+                maximum = minimum + 1;
+            }
+        }
+
         var step = width / (values.Count - 1);
 
         var lineGeometry = new StreamGeometry();
         using (var geometry = lineGeometry.Open())
         {
-            geometry.BeginFigure(new Point(0, Scale(values[0], height, maximum)), false, false);
+            geometry.BeginFigure(new Point(0, Scale(values[0], height, minimum, maximum)), false, false);
             for (var index = 1; index < values.Count; index++)
             {
-                geometry.LineTo(new Point(index * step, Scale(values[index], height, maximum)), true, false);
+                geometry.LineTo(new Point(index * step, Scale(values[index], height, minimum, maximum)), true, false);
             }
         }
 
@@ -114,10 +138,10 @@ public sealed class Sparkline : FrameworkElement
             using (var geometry = areaGeometry.Open())
             {
                 geometry.BeginFigure(new Point(0, height), true, true);
-                geometry.LineTo(new Point(0, Scale(values[0], height, maximum)), true, false);
+                geometry.LineTo(new Point(0, Scale(values[0], height, minimum, maximum)), true, false);
                 for (var index = 1; index < values.Count; index++)
                 {
-                    geometry.LineTo(new Point(index * step, Scale(values[index], height, maximum)), true, false);
+                    geometry.LineTo(new Point(index * step, Scale(values[index], height, minimum, maximum)), true, false);
                 }
 
                 geometry.LineTo(new Point((values.Count - 1) * step, height), true, false);
@@ -137,9 +161,10 @@ public sealed class Sparkline : FrameworkElement
         context.DrawGeometry(null, pen, lineGeometry);
     }
 
-    private static double Scale(double value, double height, double maximum)
+    private static double Scale(double value, double height, double minimum, double maximum)
     {
-        var normalized = Math.Clamp(value / maximum, 0, 1);
+        var span = Math.Max(0.0001, maximum - minimum);
+        var normalized = Math.Clamp((value - minimum) / span, 0, 1);
         return height - normalized * (height - 2) - 1;
     }
 }

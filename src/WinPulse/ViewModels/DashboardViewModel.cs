@@ -25,6 +25,8 @@ public sealed partial class DashboardViewModel : ObservableObject, IActivatableV
     [ObservableProperty] private string _uptimeText = "—";
     [ObservableProperty] private string _processCountText = "—";
     [ObservableProperty] private string _lastScanText = "Never";
+    [ObservableProperty] private string _diskHistorySummary = "Collecting history…";
+    [ObservableProperty] private string _diskHistoryCaption = string.Empty;
     [ObservableProperty] private bool _isLoading;
 
     public ObservableCollection<DiskSpec> Disks { get; } = new();
@@ -33,6 +35,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IActivatableV
     public ObservableCollection<FolderStat> TopFolders { get; } = new();
     public ObservableCollection<double> CpuHistory { get; } = new();
     public ObservableCollection<double> RamHistory { get; } = new();
+    public ObservableCollection<double> DiskHistory { get; } = new();
 
     public DashboardViewModel(MainViewModel main) => _main = main;
 
@@ -99,6 +102,35 @@ public sealed partial class DashboardViewModel : ObservableObject, IActivatableV
             foreach (var folder in folders)
             {
                 TopFolders.Add(folder);
+            }
+
+            var history = await Task.Run(() => AppHost.Database.GetDiskHistory(DateTime.Now.AddDays(-7))).ConfigureAwait(true);
+            DiskHistory.Clear();
+            foreach (var sample in history)
+            {
+                DiskHistory.Add(sample.FreeGb);
+            }
+
+            DiskHistoryCaption = history.Count == 0
+                ? "No samples yet"
+                : $"Last 7 days  •  {history.Count:N0} samples";
+
+            if (history.Count >= 2)
+            {
+                var first = history[0];
+                var last = history[^1];
+                var delta = last.FreeBytes - first.FreeBytes;
+                var direction = delta >= 0 ? "+" : "−";
+                DiskHistorySummary =
+                    $"{last.FreeText} free now  •  {direction}{Formats.Bytes(Math.Abs(delta))} since {first.At:MMM d, HH:mm}";
+            }
+            else if (history.Count == 1)
+            {
+                DiskHistorySummary = $"{history[0].FreeText} free  •  history builds every 5 minutes while WinPulse runs";
+            }
+            else
+            {
+                DiskHistorySummary = "History builds every 5 minutes while WinPulse runs.";
             }
         }
         catch (Exception ex)

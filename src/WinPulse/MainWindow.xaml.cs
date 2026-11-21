@@ -1,15 +1,33 @@
 using System.ComponentModel;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Interop;
 using Hardcodet.Wpf.TaskbarNotification;
 using WinPulse.Core;
 using WinPulse.ViewModels;
+using WinPulse.Views;
 
 namespace WinPulse;
 
 public partial class MainWindow : Window
 {
+    private const int WmHotkey = 0x0312;
+    private const int HotkeyId = 0x57A1;
+    private const uint ModControl = 0x0002;
+    private const uint ModShift = 0x0004;
+    private const uint VkSpace = 0x20;
+
     private bool _forceClose;
+    private IntPtr _windowHandle;
+    private HwndSource? _hwndSource;
+    private QuickSearchWindow? _quickSearchWindow;
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
     public MainWindow()
     {
@@ -89,6 +107,66 @@ public partial class MainWindow : Window
         Focus();
     }
 
+    /// <summary>Called by quick search before running an action so navigation is visible.</summary>
+    public void RestoreForQuickAction() => RestoreWindow();
+
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+
+        _windowHandle = new WindowInteropHelper(this).Handle;
+        _hwndSource = HwndSource.FromHwnd(_windowHandle);
+        _hwndSource?.AddHook(WndProc);
+
+        if (!RegisterHotKey(_windowHandle, HotkeyId, ModControl | ModShift, VkSpace))
+        {
+            Log.Warn("Global hotkey Ctrl+Shift+Space is already in use by another app.");
+        }
+    }
+
+    private IntPtr WndProc(IntPtr hwnd, int message, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (message == WmHotkey && wParam.ToInt32() == HotkeyId)
+        {
+            OpenQuickSearch();
+            handled = true;
+        }
+
+        return IntPtr.Zero;
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        if (_windowHandle != IntPtr.Zero)
+        {
+            UnregisterHotKey(_windowHandle, HotkeyId);
+        }
+
+        _hwndSource?.RemoveHook(WndProc);
+        base.OnClosed(e);
+    }
+
+    private void OpenQuickSearch()
+    {
+        if (DataContext is not MainViewModel viewModel)
+        {
+            return;
+        }
+
+        if (_quickSearchWindow is { IsVisible: true })
+        {
+            _quickSearchWindow.Activate();
+            return;
+        }
+
+        _quickSearchWindow = new QuickSearchWindow(viewModel) { Owner = this };
+        _quickSearchWindow.Show();
+        _quickSearchWindow.Activate();
+    }
+
+    /// <summary>Used by the --quick-search launch flag for verification and shortcuts.</summary>
+    public void ShowQuickSearch() => OpenQuickSearch();
+
     private void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (DataContext is not MainViewModel viewModel)
@@ -150,6 +228,10 @@ public partial class MainWindow : Window
     // ------------------------------------------------------------------ tray
 
     private void TrayIcon_TrayMouseDoubleClick(object sender, RoutedEventArgs e) => RestoreWindow();
+
+    private void TrayIcon_TrayLeftMouseUp(object sender, RoutedEventArgs e) => OpenQuickSearch();
+
+    private void TrayQuickSearch_Click(object sender, RoutedEventArgs e) => OpenQuickSearch();
 
     private void TrayOpen_Click(object sender, RoutedEventArgs e) => RestoreWindow();
 

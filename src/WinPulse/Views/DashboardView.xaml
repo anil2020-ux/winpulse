@@ -8,6 +8,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <!-- Live metrics -->
@@ -332,6 +333,23 @@
                     </StackPanel>
                 </Border>
             </Grid>
+
+            <!-- Disk space history -->
+            <Border Grid.Row="3" Style="{StaticResource CardBorder}" Margin="0,14,0,0">
+                <StackPanel>
+                    <Grid>
+                        <TextBlock Text="Disk space history" Style="{StaticResource CardTitle}" />
+                        <TextBlock Text="{Binding DiskHistoryCaption}" Style="{StaticResource Caption}"
+                                   HorizontalAlignment="Right" VerticalAlignment="Center" />
+                    </Grid>
+                    <TextBlock Text="{Binding DiskHistorySummary}" Style="{StaticResource Muted}" Margin="0,4,0,10" />
+                    <controls:Sparkline Height="92"
+                                        Values="{Binding DiskHistory}"
+                                        AutoScale="True"
+                                        Stroke="{DynamicResource BrushSuccess}"
+                                        Fill="#332DD4A7" />
+                </StackPanel>
+            </Border>
         </Grid>
     </ScrollViewer>
 </UserControl>

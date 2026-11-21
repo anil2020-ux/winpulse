@@ -2,6 +2,20 @@
 
 All notable changes to WinPulse are documented here. Versions follow `MAJOR.MINOR.PATCH`.
 
+## [1.2.0] - 2026-11-21
+
+Review, search and track from anywhere.
+
+### Added
+- **Duplicate review dialog**: side-by-side previews of every copy in a duplicate group, click the copy to keep, then recycle the rest. Also "auto-resolve all (keep newest)" for a whole cleanup pass.
+- **Tray quick search popup**: left-click the tray icon or press **Ctrl+Shift+Space** anywhere in Windows to search pages, actions and indexed files; Enter runs the selection.
+- **Disk space history**: WinPulse stores a free-space sample every 5 minutes (30 days retention) and renders a 7-day chart on the dashboard with net change since the first sample.
+- CLI hooks `--quick-search` and `--review-duplicates` for automation/verification.
+- Self-test now covers disk-history persistence.
+
+### Changed
+- Cleanup header now offers **Review duplicates** (dialog) and a smaller **Delete duplicates** bulk shortcut.
+
 ## [1.1.0] - 2026-11-21
 
 The "pro" update: background mode, instant navigation and visual analytics.

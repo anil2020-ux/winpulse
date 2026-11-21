@@ -96,6 +96,15 @@ CREATE TABLE IF NOT EXISTS settings (
     key   TEXT PRIMARY KEY,
     value TEXT
 );
+
+CREATE TABLE IF NOT EXISTS disk_history (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    at          TEXT NOT NULL,
+    free_bytes  INTEGER NOT NULL,
+    total_bytes INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_disk_at ON disk_history(at);
 ");
 
             if (seedDefaults)
@@ -828,6 +837,51 @@ WHERE id = @id";
             cmd.Parameters.AddWithValue("@k", key);
             cmd.Parameters.AddWithValue("@v", (object?)value ?? DBNull.Value);
             cmd.ExecuteNonQuery();
+        }
+    }
+
+    // ---------------------------------------------------------- disk history
+
+    /// <summary>Stores one disk-space sample and prunes anything older than 30 days.</summary>
+    public void AddDiskSample(long freeBytes, long totalBytes)
+    {
+        lock (_gate)
+        {
+            using var insert = _connection.CreateCommand();
+            insert.CommandText = "INSERT INTO disk_history (at, free_bytes, total_bytes) VALUES (@a, @f, @t)";
+            insert.Parameters.AddWithValue("@a", DbTime.NowDb());
+            insert.Parameters.AddWithValue("@f", freeBytes);
+            insert.Parameters.AddWithValue("@t", totalBytes);
+            insert.ExecuteNonQuery();
+
+            using var prune = _connection.CreateCommand();
+            prune.CommandText = "DELETE FROM disk_history WHERE at < @cutoff";
+            prune.Parameters.AddWithValue("@cutoff", DbTime.ToDb(DateTime.Now.AddDays(-30)));
+            prune.ExecuteNonQuery();
+        }
+    }
+
+    public List<DiskSample> GetDiskHistory(DateTime since)
+    {
+        lock (_gate)
+        {
+            var list = new List<DiskSample>();
+            using var cmd = _connection.CreateCommand();
+            cmd.CommandText = @"SELECT at, free_bytes, total_bytes FROM disk_history
+                                WHERE at >= @since ORDER BY at ASC";
+            cmd.Parameters.AddWithValue("@since", DbTime.ToDb(since));
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                list.Add(new DiskSample
+                {
+                    At = DbTime.FromDb(reader.GetString(0)),
+                    FreeBytes = reader.GetInt64(1),
+                    TotalBytes = reader.GetInt64(2),
+                });
+            }
+
+            return list;
         }
     }
 

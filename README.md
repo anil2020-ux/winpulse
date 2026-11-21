@@ -83,6 +83,9 @@ It indexes your watched folders in the background, keeps a searchable timeline o
 
 ### Pro conveniences
 - **Ctrl+K command palette** — jump to any page, run actions or find an indexed file by name with the keyboard.
+- **Tray quick search** — left-click the tray icon or press **Ctrl+Shift+Space** from anywhere for a compact search popup over pages, actions and files.
+- **Duplicate review dialog** — see every copy side by side, pick the keeper, recycle the rest (or auto-resolve whole scans).
+- **Disk space history** — a free-space sample every 5 minutes, charted over 7 days on the dashboard.
 - **System tray mode** — close the window and WinPulse keeps tracking; right-click for scan, pages and exit. Balloon notifications flag new large files and low disk space.
 - **Screenshots gallery** — thumbnail wall of every capture, time filters, full preview and one-click "delete older than 30 days".
 - **Largest folders analytics** — see which directories actually carry your 100+ GB.
