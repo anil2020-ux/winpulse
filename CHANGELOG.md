@@ -2,6 +2,26 @@
 
 All notable changes to WinPulse are documented here. Versions follow `MAJOR.MINOR.PATCH`.
 
+## [1.1.0] - 2026-11-21
+
+The "pro" update: background mode, instant navigation and visual analytics.
+
+### Added
+- **System tray mode**: a tray icon with a context menu (open, scan, pages, exit), close-to-tray behaviour and `--minimized` support. Closing the window now keeps WinPulse tracking.
+- **Tray notifications** for new large files (>100 MB), low disk space, and background mode.
+- **Ctrl+K command palette**: fuzzy search pages, actions and indexed files; arrow keys + Enter, or double-click. Also opens with `--palette`.
+- **Screenshots gallery** page with thumbnail grid, time filters, full preview, per-file actions, and "delete older than 30 days".
+- **Largest folders** analytics card on the dashboard.
+- **CSV export** of the currently filtered file list.
+- **Bulk duplicate resolution** in Cleanup: keep the newest copy of each group, recycle the rest.
+
+### Changed
+- Status bar advertises Ctrl+K and shows the new navigation entry.
+- Settings gained a "keep running in the tray" switch.
+
+### Fixed
+- `--view=screenshots` and other short aliases for the launch flag.
+
 ## [1.0.2] - 2026-11-21
 
 Cleanup reaches feature parity with the File activity explorer.

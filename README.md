@@ -29,6 +29,12 @@ It indexes your watched folders in the background, keeps a searchable timeline o
 <p align="center">
   <img src="docs/screenshots/file-activity.png" alt="WinPulse File activity: filters by category, date, size, sort and source, file grid with preview pane and actions" width="900" />
 </p>
+<p align="center">
+  <img src="docs/screenshots/screenshots.png" alt="WinPulse Screenshots gallery with thumbnails and preview" width="900" />
+</p>
+<p align="center">
+  <img src="docs/screenshots/command-palette.png" alt="WinPulse Ctrl+K command palette searching pages and indexed files" width="900" />
+</p>
 
 ## Highlights
 
@@ -74,6 +80,13 @@ It indexes your watched folders in the background, keeps a searchable timeline o
 - When an update exists, the title bar shows **Update available**; the update panel lets you read release notes, **download with progress inside the app**, then *Install and restart*.
 - A small updater script swaps the installed files after exit and relaunches WinPulse.
 - Optional GitHub token field for private repositories.
+
+### Pro conveniences
+- **Ctrl+K command palette** — jump to any page, run actions or find an indexed file by name with the keyboard.
+- **System tray mode** — close the window and WinPulse keeps tracking; right-click for scan, pages and exit. Balloon notifications flag new large files and low disk space.
+- **Screenshots gallery** — thumbnail wall of every capture, time filters, full preview and one-click "delete older than 30 days".
+- **Largest folders analytics** — see which directories actually carry your 100+ GB.
+- **CSV export** of any filtered file list, and **bulk duplicate resolution** (keep newest, recycle the rest).
 
 ## Install
 

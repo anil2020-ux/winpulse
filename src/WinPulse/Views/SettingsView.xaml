@@ -114,6 +114,8 @@
                         <TextBlock Text="Startup" Style="{StaticResource CardTitle}" />
                         <ToggleButton Style="{StaticResource Switch}" Content="Start WinPulse with Windows"
                                       IsChecked="{Binding StartWithWindows}" Margin="0,14,0,0" HorizontalAlignment="Left" />
+                        <ToggleButton Style="{StaticResource Switch}" Content="Keep running in the tray when the window closes"
+                                      IsChecked="{Binding CloseToTray}" Margin="0,14,0,0" HorizontalAlignment="Left" />
                         <TextBlock Text="Runs in the background so your activity is always tracked."
                                    Style="{StaticResource Caption}" Margin="0,8,0,0" />
                     </StackPanel>

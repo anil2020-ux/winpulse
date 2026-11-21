@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Text;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -310,6 +311,70 @@ public sealed partial class FilesViewModel : ObservableObject, IActivatableViewM
 
     [RelayCommand]
     private void TogglePreview() => IsPreviewVisible = !IsPreviewVisible;
+
+    [RelayCommand]
+    private async Task ExportCsv()
+    {
+        var rows = Files.ToList();
+        if (rows.Count == 0)
+        {
+            DialogService.Info("Nothing to export", "No rows match the current filters.");
+            return;
+        }
+
+        var dialog = new SaveFileDialog
+        {
+            Title = "Export file activity to CSV",
+            Filter = "CSV file (*.csv)|*.csv",
+            FileName = $"winpulse-files-{DateTime.Now:yyyyMMdd-HHmm}.csv",
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            var csv = new StringBuilder();
+            csv.AppendLine("Name,Path,Category,SizeBytes,Size,Modified,Created,Source,Folder,Protected");
+            foreach (var file in rows)
+            {
+                csv.AppendLine(string.Join(",",
+                    Csv(file.Name),
+                    Csv(file.FullPath),
+                    Csv(file.CategoryLabel),
+                    file.Size.ToString(),
+                    Csv(file.SizeText),
+                    file.Modified.ToString("s"),
+                    file.Created.ToString("s"),
+                    Csv(file.RootLabel),
+                    Csv(file.Folder),
+                    file.Keep ? "yes" : "no"));
+            }
+
+            await File.WriteAllTextAsync(dialog.FileName, csv.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+            _main.Notify($"Exported {rows.Count:N0} rows to {Path.GetFileName(dialog.FileName)}.");
+            FileOperations.RevealInExplorer(dialog.FileName);
+        }
+        catch (Exception ex)
+        {
+            Log.Error("CSV export failed", ex);
+            DialogService.Info("Export failed", ex.Message);
+        }
+    }
+
+    private static string Csv(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return string.Empty;
+        }
+
+        return value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r')
+            ? "\"" + value.Replace("\"", "\"\"") + "\""
+            : value;
+    }
 
     // ---------------------------------------------------------------- selection
 

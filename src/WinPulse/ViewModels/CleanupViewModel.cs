@@ -277,6 +277,57 @@ public sealed partial class CleanupViewModel : ObservableObject, IActivatableVie
 
     // ------------------------------------------------------- per-file actions
 
+    [RelayCommand]
+    private async Task DeleteDuplicateCopiesAsync()
+    {
+        var targets = Items
+            .Where(item => item.Reason == "Duplicate copy")
+            .Select(item => item.File)
+            .ToList();
+
+        if (targets.Count == 0)
+        {
+            _main.Notify("No duplicate copies to delete.");
+            return;
+        }
+
+        var confirmed = DialogService.Confirm(
+            "Delete duplicate copies",
+            $"Move {targets.Count:N0} duplicate copies ({Formats.Bytes(targets.Sum(file => file.Size))}) to the Recycle Bin?\n\nThe newest copy in each duplicate group is kept.",
+            "Move to Recycle Bin");
+
+        if (!confirmed)
+        {
+            return;
+        }
+
+        var result = await Task.Run(() => FileOperations.Recycle(targets.Select(file => file.FullPath).ToList()));
+        if (!result.Success)
+        {
+            DialogService.Info("Delete failed", result.Message);
+            return;
+        }
+
+        foreach (var file in targets)
+        {
+            AppHost.Database.DeleteRow(file.Id);
+        }
+
+        var ids = targets.Select(file => file.Id).ToHashSet();
+        foreach (var item in Items.Where(item => ids.Contains(item.File.Id)).ToList())
+        {
+            Items.Remove(item);
+        }
+
+        ItemCount = Items.Count;
+        ReclaimableText = Formats.Bytes(Items.Sum(item => item.File.Size));
+        SelectedItem = Items.FirstOrDefault();
+        _main.Notify(result.Message);
+        await _main.Dashboard.RefreshSlowAsync();
+        _main.UpdateIndexSummary();
+        await _main.Files.ReloadAsync();
+    }
+
     private FileEntry? TargetFile => SelectedItem?.File;
 
     [RelayCommand]

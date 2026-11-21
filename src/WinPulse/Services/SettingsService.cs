@@ -40,6 +40,13 @@ public sealed class SettingsService
         set => StartupService.SetEnabled(value);
     }
 
+    /// <summary>Keep running in the system tray when the window is closed.</summary>
+    public bool CloseToTray
+    {
+        get => ParseBool(_db.GetSetting("close_to_tray"), true);
+        set => _db.SetSetting("close_to_tray", value ? "1" : "0");
+    }
+
     public string Theme
     {
         get => _db.GetSetting("theme") ?? "Dark";

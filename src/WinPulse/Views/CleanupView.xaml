@@ -43,8 +43,13 @@
                     </StackPanel>
                 </UniformGrid>
 
-                <Button Grid.Column="2" Content="Scan for cleanup" Style="{StaticResource PrimaryButton}"
-                        VerticalAlignment="Center" Command="{Binding ScanNowCommand}" />
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="Delete duplicate copies" Style="{StaticResource SecondaryButton}"
+                            Margin="0,0,8,0" FontSize="12" Padding="12,8"
+                            Command="{Binding DeleteDuplicateCopiesCommand}" />
+                    <Button Content="Scan for cleanup" Style="{StaticResource PrimaryButton}"
+                            Command="{Binding ScanNowCommand}" />
+                </StackPanel>
             </Grid>
         </Border>
 

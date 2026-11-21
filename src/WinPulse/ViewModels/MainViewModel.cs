@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using WinPulse.Core;
 using WinPulse.Models;
+using WinPulse.Services;
 
 namespace WinPulse.ViewModels;
 
@@ -25,9 +26,12 @@ public sealed partial class MainViewModel : ObservableObject
     private bool _samplingPerformance;
     private int _secondsSinceSlowRefresh;
     private string? _downloadedUpdatePath;
+    private CancellationTokenSource? _paletteCts;
+    private bool _lowDiskNotified;
 
     public DashboardViewModel Dashboard { get; }
     public FilesViewModel Files { get; }
+    public ScreenshotsViewModel Screenshots { get; }
     public ProcessesViewModel Processes { get; }
     public AppsViewModel Apps { get; }
     public CleanupViewModel Cleanup { get; }
@@ -53,10 +57,17 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty] private bool _isUpdateReady;
     [ObservableProperty] private string _updateStatus = string.Empty;
 
+    // Command palette
+    public ObservableCollection<PaletteItem> PaletteResults { get; } = new();
+    [ObservableProperty] private bool _isPaletteOpen;
+    [ObservableProperty] private string _paletteQuery = string.Empty;
+    [ObservableProperty] private int _paletteSelectedIndex;
+
     public MainViewModel()
     {
         Dashboard = new DashboardViewModel(this);
         Files = new FilesViewModel(this);
+        Screenshots = new ScreenshotsViewModel(this);
         Processes = new ProcessesViewModel();
         Apps = new AppsViewModel();
         Cleanup = new CleanupViewModel(this);
@@ -66,6 +77,7 @@ public sealed partial class MainViewModel : ObservableObject
         {
             new() { Title = "Dashboard", Subtitle = "Live system overview", Glyph = "\uE80F", ViewModel = Dashboard },
             new() { Title = "File activity", Subtitle = "Downloads, saves, screenshots and more", Glyph = "\uE8B7", ViewModel = Files },
+            new() { Title = "Screenshots", Subtitle = "Everything you captured, in one place", Glyph = "\uE91B", ViewModel = Screenshots },
             new() { Title = "Processes", Subtitle = "What is running on your PC right now", Glyph = "\uE9F5", ViewModel = Processes },
             new() { Title = "Apps", Subtitle = "Installed programs and downloaded installers", Glyph = "\uE71D", ViewModel = Apps },
             new() { Title = "Cleanup", Subtitle = "Reclaim space without the guesswork", Glyph = "\uE74D", ViewModel = Cleanup },
@@ -156,6 +168,22 @@ public sealed partial class MainViewModel : ObservableObject
             Performance = snapshot;
             Dashboard.UpdatePerformance(snapshot);
 
+            // Low disk warning once per crossing, with tray balloon.
+            if (snapshot.DiskFreeBytes > 0 && snapshot.DiskFreeBytes < 15L * 1024 * 1024 * 1024)
+            {
+                if (!_lowDiskNotified)
+                {
+                    _lowDiskNotified = true;
+                    TrayService.Notify(
+                        "Low disk space",
+                        $"{snapshot.DiskFreeText} left on your system drive. Cleanup can suggest safe deletions.");
+                }
+            }
+            else if (snapshot.DiskFreeBytes > 20L * 1024 * 1024 * 1024)
+            {
+                _lowDiskNotified = false;
+            }
+
             _secondsSinceSlowRefresh++;
             if (_secondsSinceSlowRefresh >= 30)
             {
@@ -199,11 +227,17 @@ public sealed partial class MainViewModel : ObservableObject
             await Dashboard.RefreshAsync();
             await Files.ReloadAsync();
             await Settings.RefreshStatsAsync();
+            if (Screenshots.IsLoaded)
+            {
+                await Screenshots.ReloadAsync();
+            }
+
             UpdateIndexSummary();
 
             if (result.Phase == ScanPhase.Done && result.NewFiles > 0)
             {
                 Notify($"{result.NewFiles} new file(s) indexed. Open File activity to review them.");
+                await NotifyLargeNewFilesAsync();
             }
         }
         catch (Exception ex)
@@ -216,6 +250,30 @@ public sealed partial class MainViewModel : ObservableObject
             IsScanning = false;
             ScanDetail = string.Empty;
             ScanProgress = 0;
+        }
+    }
+
+    private async Task NotifyLargeNewFilesAsync()
+    {
+        try
+        {
+            var events = await Task.Run(() => AppHost.Database.GetRecentEvents(15)).ConfigureAwait(true);
+            var large = events.FirstOrDefault(activity =>
+                activity.Kind == "added" &&
+                activity.Size >= 100L * 1024 * 1024 &&
+                activity.At > DateTime.Now.AddMinutes(-10));
+
+            if (large is not null)
+            {
+                TrayService.Notify(
+                    "New large file indexed",
+                    $"{large.Name}  •  {large.SizeText}",
+                    Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warn("Could not notify about new files: " + ex.Message);
         }
     }
 
@@ -455,6 +513,177 @@ public sealed partial class MainViewModel : ObservableObject
             {
                 (item.ViewModel as IActivatableViewModel)?.OnDeactivated();
             }
+        }
+    }
+
+    // ------------------------------------------------------- command palette
+
+    private static readonly PaletteItem[] PaletteCommands =
+    {
+        new() { Title = "Dashboard", Subtitle = "Page", Glyph = "\uE80F", Kind = "page" },
+        new() { Title = "File activity", Subtitle = "Page", Glyph = "\uE8B7", Kind = "page" },
+        new() { Title = "Screenshots", Subtitle = "Page", Glyph = "\uE91B", Kind = "page" },
+        new() { Title = "Processes", Subtitle = "Page", Glyph = "\uE9F5", Kind = "page" },
+        new() { Title = "Apps", Subtitle = "Page", Glyph = "\uE71D", Kind = "page" },
+        new() { Title = "Cleanup", Subtitle = "Page", Glyph = "\uE74D", Kind = "page" },
+        new() { Title = "Settings", Subtitle = "Page", Glyph = "\uE713", Kind = "page" },
+        new() { Title = "Scan now", Subtitle = "Refresh the file index", Glyph = "\uE72C", Kind = "command", CommandId = "scan" },
+        new() { Title = "Check for updates", Subtitle = "GitHub release check", Glyph = "\uE895", Kind = "command", CommandId = "updates" },
+        new() { Title = "Toggle theme", Subtitle = "Switch dark / light", Glyph = "\uE793", Kind = "command", CommandId = "theme" },
+        new() { Title = "Open Downloads folder", Subtitle = "Explorer", Glyph = "\uE8B7", Kind = "command", CommandId = "downloads" },
+        new() { Title = "Open data folder", Subtitle = "Index, logs and updates", Glyph = "\uE8DA", Kind = "command", CommandId = "data" },
+        new() { Title = "Open logs", Subtitle = "Troubleshooting", Glyph = "\uE7C3", Kind = "command", CommandId = "logs" },
+    };
+
+    [RelayCommand]
+    private void OpenPalette()
+    {
+        PaletteQuery = string.Empty;
+        IsPaletteOpen = true;
+        Log.Info("Command palette opened.");
+        _ = UpdatePaletteAsync(string.Empty);
+    }
+
+    [RelayCommand]
+    private void ClosePalette()
+    {
+        IsPaletteOpen = false;
+        PaletteQuery = string.Empty;
+    }
+
+    partial void OnPaletteQueryChanged(string value) => _ = DebouncePaletteAsync(value);
+
+    private async Task DebouncePaletteAsync(string query)
+    {
+        _paletteCts?.Cancel();
+        var cts = _paletteCts = new CancellationTokenSource();
+        try
+        {
+            await Task.Delay(140, cts.Token).ConfigureAwait(true);
+            await UpdatePaletteAsync(query).ConfigureAwait(true);
+        }
+        catch (OperationCanceledException)
+        {
+            // Superseded by a newer keystroke.
+        }
+    }
+
+    private async Task UpdatePaletteAsync(string query)
+    {
+        var trimmed = query.Trim();
+        var results = new List<PaletteItem>();
+
+        var commands = PaletteCommands
+            .Where(item => trimmed.Length == 0 ||
+                           item.Title.Contains(trimmed, StringComparison.OrdinalIgnoreCase) ||
+                           item.Subtitle.Contains(trimmed, StringComparison.OrdinalIgnoreCase))
+            .Take(trimmed.Length == 0 ? 7 : 6);
+
+        results.AddRange(commands);
+
+        try
+        {
+            List<FileEntry> files;
+            if (trimmed.Length == 0)
+            {
+                files = await Task.Run(() => AppHost.Database.QueryRecentFiles(5)).ConfigureAwait(true);
+            }
+            else if (trimmed.Length >= 2)
+            {
+                var fileQuery = new FileQuery { Search = trimmed, Limit = 8, Sort = "modified_desc" };
+                files = await Task.Run(() => AppHost.Database.QueryFiles(fileQuery, out _)).ConfigureAwait(true);
+            }
+            else
+            {
+                files = new List<FileEntry>();
+            }
+
+            results.AddRange(files.Select(file => new PaletteItem
+            {
+                Title = file.Name,
+                Subtitle = $"{file.SizeText}  •  {file.ModifiedRelative}  •  {file.RootLabel}",
+                Glyph = file.Glyph,
+                Kind = "file",
+                File = file,
+            }));
+        }
+        catch (Exception ex)
+        {
+            Log.Warn("Palette file search failed: " + ex.Message);
+        }
+
+        if (!IsPaletteOpen)
+        {
+            return;
+        }
+
+        PaletteResults.Clear();
+        foreach (var item in results)
+        {
+            PaletteResults.Add(item);
+        }
+
+        PaletteSelectedIndex = PaletteResults.Count > 0 ? 0 : -1;
+    }
+
+    public void MovePaletteSelection(int delta)
+    {
+        if (PaletteResults.Count == 0)
+        {
+            return;
+        }
+
+        PaletteSelectedIndex = Math.Clamp(PaletteSelectedIndex + delta, 0, PaletteResults.Count - 1);
+    }
+
+    public void ExecutePaletteSelection()
+    {
+        var item = PaletteResults.ElementAtOrDefault(PaletteSelectedIndex);
+        if (item is null)
+        {
+            return;
+        }
+
+        ClosePalette();
+
+        if (item.Kind == "file" && item.File is not null)
+        {
+            Files.SearchText = item.File.Name;
+            Navigate("File activity");
+            return;
+        }
+
+        if (item.Kind == "page")
+        {
+            Navigate(item.Title);
+            return;
+        }
+
+        switch (item.CommandId)
+        {
+            case "scan":
+                _ = RunScanAsync();
+                break;
+            case "updates":
+                _ = CheckUpdatesCoreAsync(silent: false);
+                break;
+            case "theme":
+                ToggleTheme();
+                break;
+            case "downloads":
+                var downloads = KnownFolders.Get("Downloads");
+                if (downloads is not null)
+                {
+                    FileOperations.OpenFolder(downloads);
+                }
+
+                break;
+            case "data":
+                FileOperations.OpenFolder(AppPaths.DataDirectory);
+                break;
+            case "logs":
+                FileOperations.RevealInExplorer(AppPaths.LogFile);
+                break;
         }
     }
 

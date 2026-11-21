@@ -88,7 +88,14 @@ public partial class App : Application
 
         if (e.Args.Any(a => a.Equals("--minimized", StringComparison.OrdinalIgnoreCase)))
         {
-            window.WindowState = WindowState.Minimized;
+            if (AppHost.Settings.CloseToTray)
+            {
+                window.Hide();
+            }
+            else
+            {
+                window.WindowState = WindowState.Minimized;
+            }
         }
 
         viewModel.OnStarted();
@@ -99,11 +106,19 @@ public partial class App : Application
         {
             viewModel.NavigateTo(NormalizeViewName(viewArgument["--view=".Length..]));
         }
+
+        if (e.Args.Any(argument => argument.Equals("--palette", StringComparison.OrdinalIgnoreCase)))
+        {
+            Dispatcher.BeginInvoke(
+                new Action(() => viewModel.OpenPaletteCommand.Execute(null)),
+                System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+        }
     }
 
     private static string NormalizeViewName(string value) => value.Trim().ToLowerInvariant() switch
     {
         "files" or "file" or "activity" or "file activity" => "File activity",
+        "screenshots" or "screenshot" or "shots" or "gallery" => "Screenshots",
         "processes" or "process" or "tasks" => "Processes",
         "apps" or "applications" or "programs" => "Apps",
         "cleanup" or "clean" => "Cleanup",

@@ -611,6 +611,47 @@ WHERE is_deleted = 0 AND is_protected = 0 AND size IN (" + placeholders + ")";
         }
     }
 
+    /// <summary>Largest indexed folders, used by the dashboard analytics card.</summary>
+    public List<FolderStat> GetTopFolders(int limit)
+    {
+        var sizes = new Dictionary<string, (int Count, long Size)>(StringComparer.OrdinalIgnoreCase);
+
+        lock (_gate)
+        {
+            using var cmd = _connection.CreateCommand();
+            cmd.CommandText = "SELECT path, size FROM files WHERE is_deleted = 0";
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                var path = reader.GetString(0);
+                var size = reader.GetInt64(1);
+                var folder = System.IO.Path.GetDirectoryName(path) ?? path;
+
+                if (sizes.TryGetValue(folder, out var existing))
+                {
+                    sizes[folder] = (existing.Count + 1, existing.Size + size);
+                }
+                else
+                {
+                    sizes[folder] = (1, size);
+                }
+            }
+        }
+
+        var total = sizes.Values.Sum(value => value.Size);
+        return sizes
+            .OrderByDescending(pair => pair.Value.Size)
+            .Take(limit)
+            .Select(pair => new FolderStat
+            {
+                Folder = pair.Key,
+                Count = pair.Value.Count,
+                Size = pair.Value.Size,
+                Percent = total > 0 ? pair.Value.Size * 100.0 / total : 0,
+            })
+            .ToList();
+    }
+
     public List<FileEntry> QueryRecentFiles(int limit)
     {
         var query = new FileQuery { Sort = "first_desc", Limit = limit };

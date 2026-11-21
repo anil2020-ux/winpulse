@@ -254,8 +254,14 @@
                 </Grid>
             </Grid>
 
-            <!-- Storage mix -->
-            <Border Grid.Row="2" Style="{StaticResource CardBorder}">
+            <!-- Storage mix + folder analytics -->
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.55*" />
+                    <ColumnDefinition Width="1*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{StaticResource CardBorder}" Margin="0,0,12,0">
                 <StackPanel>
                     <Grid Margin="0,0,0,10">
                         <TextBlock Text="Storage by file type" Style="{StaticResource CardTitle}" />
@@ -294,7 +300,38 @@
                                Margin="0,8,0,0"
                                Visibility="{Binding Categories.Count, Converter={StaticResource EmptyToVis}}" />
                 </StackPanel>
-            </Border>
+                </Border>
+
+                <Border Grid.Column="1" Style="{StaticResource CardBorder}">
+                    <StackPanel>
+                        <TextBlock Text="Largest folders" Style="{StaticResource CardTitle}" />
+                        <TextBlock Text="Where your indexed files actually live" Style="{StaticResource Caption}" Margin="0,3,0,12" />
+                        <ItemsControl ItemsSource="{Binding TopFolders}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,5">
+                                        <Grid>
+                                            <TextBlock Text="{Binding DisplayFolder}" FontSize="12"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding DisplayFolder}" />
+                                            <TextBlock Text="{Binding SizeText}" FontSize="11" HorizontalAlignment="Right"
+                                                       Foreground="{DynamicResource BrushTextSecondary}" />
+                                        </Grid>
+                                        <ProgressBar Style="{StaticResource SlimProgress}" Height="4" Margin="0,5,0,2"
+                                                     Value="{Binding Percent, Mode=OneWay}" />
+                                        <TextBlock Text="{Binding CountText}" Style="{StaticResource Caption}" FontSize="10" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <TextBlock Text="No indexed folders yet."
+                                   Style="{StaticResource Muted}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,12,0,0"
+                                   Visibility="{Binding TopFolders.Count, Converter={StaticResource EmptyToVis}}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
         </Grid>
     </ScrollViewer>
 </UserControl>

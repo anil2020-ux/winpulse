@@ -30,6 +30,7 @@ public sealed partial class DashboardViewModel : ObservableObject, IActivatableV
     public ObservableCollection<DiskSpec> Disks { get; } = new();
     public ObservableCollection<ActivityEvent> RecentActivity { get; } = new();
     public ObservableCollection<CategoryStat> Categories { get; } = new();
+    public ObservableCollection<FolderStat> TopFolders { get; } = new();
     public ObservableCollection<double> CpuHistory { get; } = new();
     public ObservableCollection<double> RamHistory { get; } = new();
 
@@ -91,6 +92,13 @@ public sealed partial class DashboardViewModel : ObservableObject, IActivatableV
             foreach (var category in categories)
             {
                 Categories.Add(category);
+            }
+
+            var folders = await Task.Run(() => AppHost.Database.GetTopFolders(6)).ConfigureAwait(true);
+            TopFolders.Clear();
+            foreach (var folder in folders)
+            {
+                TopFolders.Add(folder);
             }
         }
         catch (Exception ex)

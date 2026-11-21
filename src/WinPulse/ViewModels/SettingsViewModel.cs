@@ -21,6 +21,7 @@ public sealed partial class SettingsViewModel : ObservableObject, IActivatableVi
     [ObservableProperty] private bool _watchFolders;
     [ObservableProperty] private bool _autoUpdate;
     [ObservableProperty] private bool _startWithWindows;
+    [ObservableProperty] private bool _closeToTray;
     [ObservableProperty] private string _githubToken = string.Empty;
     [ObservableProperty] private IndexStats _stats = new();
     [ObservableProperty] private bool _isBusy;
@@ -39,6 +40,7 @@ public sealed partial class SettingsViewModel : ObservableObject, IActivatableVi
         _watchFolders = AppHost.Settings.WatchFolders;
         _autoUpdate = AppHost.Settings.AutoUpdateCheck;
         _startWithWindows = AppHost.Settings.StartWithWindows;
+        _closeToTray = AppHost.Settings.CloseToTray;
         _githubToken = AppHost.Settings.GitHubToken;
         _ = RefreshAsync();
     }
@@ -113,6 +115,14 @@ public sealed partial class SettingsViewModel : ObservableObject, IActivatableVi
     {
         AppHost.Settings.StartWithWindows = value;
         StatusNote = value ? "WinPulse will start with Windows." : "Startup entry removed.";
+    }
+
+    partial void OnCloseToTrayChanged(bool value)
+    {
+        AppHost.Settings.CloseToTray = value;
+        StatusNote = value
+            ? "Closing the window keeps WinPulse tracking in the tray."
+            : "Closing the window will exit WinPulse.";
     }
 
     // ---------------------------------------------------------------- commands
