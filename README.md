@@ -23,6 +23,13 @@ WinPulse is a native Windows app that answers the questions you keep forgetting 
 
 It indexes your watched folders in the background, keeps a searchable timeline of every file (with size, type, age and source), previews files **inside the app**, and lets you open, reveal, rename, copy, move, protect or recycle-bin delete anything without leaving WinPulse.
 
+<p align="center">
+  <img src="docs/screenshots/dashboard.png" alt="WinPulse dashboard: live CPU, memory and disk gauges, hardware inventory, quick stats and storage by file type" width="900" />
+</p>
+<p align="center">
+  <img src="docs/screenshots/file-activity.png" alt="WinPulse File activity: filters by category, date, size, sort and source, file grid with preview pane and actions" width="900" />
+</p>
+
 ## Highlights
 
 ### Live system dashboard
